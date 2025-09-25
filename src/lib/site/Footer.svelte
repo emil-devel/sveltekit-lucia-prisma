@@ -5,7 +5,7 @@
 
 {#if page.data.authUser}
 	<div class="flex flex-row-reverse flex-wrap items-center gap-4">
-		<!-- <a
+		<a
 			class="btn preset-outlined-primary-200-800 btn-sm hover:preset-filled-primary-200-800"
 			class:preset-filled-primary-200-800={page.url.pathname === '/users'}
 			class:preset-tonal-primary={page.url.pathname.includes('/users')}
@@ -14,7 +14,7 @@
 		>
 			<UsersRound size="16" />
 			<span>Users</span>
-		</a> -->
+		</a>
 	</div>
 {/if}
 <p class="text-center">

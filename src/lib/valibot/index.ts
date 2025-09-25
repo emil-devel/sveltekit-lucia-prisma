@@ -10,8 +10,10 @@ import {
 	check,
 	boolean,
 	date,
-	optional
+	optional,
+	enum_
 } from 'valibot';
+// Keep role values in sync with $lib/permissions/ROLES and Prisma enum
 
 export const loginSchema = object({
 	username: pipe(string(), trim(), toLowerCase()),
@@ -48,7 +50,15 @@ export const userEmailSchema = object({
 	email: pipe(string(), email(), trim(), toLowerCase())
 });
 export const activeUserSchema = object({ id: string(), active: boolean() });
-export const roleUserSchema = object({ id: string(), role: string() });
+
+// Build a Valibot-compatible enum object from the shared ROLES list
+export const ROLE_ENUM = {
+	USER: 'USER',
+	REDACTEUR: 'REDACTEUR',
+	ADMIN: 'ADMIN'
+} as const;
+
+export const roleUserSchema = object({ id: string(), role: enum_(ROLE_ENUM) });
 
 // Per-field schemas for profile page partial updates
 export const profileFirstNameSchema = object({

@@ -45,7 +45,7 @@
 						<span>Home</span>
 					</a>
 				</li>
-				<!-- <li>
+				<li>
 					<a
 						class="btn preset-outlined-primary-200-800 btn-sm hover:preset-filled-primary-200-800"
 						class:preset-filled-primary-200-800={page.url.pathname === '/users'}
@@ -56,7 +56,7 @@
 						<UsersRound size="16" />
 						<span>Users</span>
 					</a>
-				</li> -->
+				</li>
 			</ul>
 		</nav>
 	{/if}

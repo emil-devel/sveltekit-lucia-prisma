@@ -46,14 +46,14 @@ model User {
 model Profile {
   id String @id @default(uuid())
 
+  userId    String  @unique
+  name      String  @unique
   avatar    String? @db.Text
   firstName String?
   lastName  String?
   phone     String?
   bio       String? @db.Text
   user      User    @relation(fields: [userId, name], references: [id, username], onUpdate: Cascade, onDelete: Cascade)
-  userId    String  @unique
-  name      String  @unique
 
   @@unique([userId, name])
   @@map("profile")
