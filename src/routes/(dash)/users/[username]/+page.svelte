@@ -5,6 +5,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { userEmailSchema, userNameSchema } from '$lib/valibot';
+	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import { scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
@@ -16,7 +17,6 @@
 		UserRoundPen,
 		UserRoundX
 	} from '@lucide/svelte';
-
 	const iconSize: number = 16;
 
 	import { ROLES } from '$lib/permissions';
@@ -84,6 +84,8 @@
 	const canAdminManage = $derived(canManageUser(page.data.authUser, $deleteForm.id));
 
 	let deleteConfirm = $state(false);
+	let activeFormEl: HTMLFormElement | null = $state(null);
+	let activeCheched = $state($activeForm.active);
 </script>
 
 <svelte:head>
@@ -97,12 +99,12 @@
 	>
 		<header
 			class="flex flex-row-reverse items-center gap-4 p-4"
-			class:preset-filled-primary-300-700={$activeForm.active}
-			class:opacity-60={!$activeForm.active}
+			class:preset-filled-primary-300-700={activeCheched}
+			class:opacity-60={!activeCheched}
 		>
 			<h2 class="h4">{roleValue}</h2>
 			<p>
-				{#if $activeForm.active}
+				{#if activeCheched}
 					<UserRoundCheck />
 				{:else}
 					<UserRoundX />
@@ -206,28 +208,36 @@
 				{/if}
 				{#if canAdminManage}
 					<div class="flex justify-between gap-4">
-						<form method="post" action="?/active" use:activeEnhance>
+						<form method="post" action="?/active" use:activeEnhance bind:this={activeFormEl}>
 							<input class="input" type="hidden" name="id" value={$deleteForm.id} />
-							<label class="label">
+							<p class="label-text pb-1">Active</p>
+							<Switch
+								name="active"
+								checked={activeCheched}
+								onCheckedChange={(e) => {
+									(activeFormEl?.requestSubmit(), (activeCheched = e.checked));
+								}}
+							/>
+							<!-- <label class="label">
 								<span class="label-text">Active</span>
 								<input
-									onchange={(e) => (e.currentTarget as HTMLInputElement).form?.requestSubmit()}
 									class="checkbox"
 									type="checkbox"
 									name="active"
 									bind:checked={$activeForm.active}
+									onchange={(e) => (e.currentTarget as HTMLInputElement).form?.requestSubmit()}
 								/>
-							</label>
+							</label> -->
 						</form>
 						<form method="post" action="?/role" use:roleEnhance>
 							<input class="input" type="hidden" name="id" value={$deleteForm.id} />
 							<label class="label">
 								<span class="label-text">Role</span>
 								<select
-									onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit()}
-									bind:value={roleValue}
 									class="select w-fit text-sm lowercase"
 									name="role"
+									onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit()}
+									bind:value={roleValue}
 								>
 									{#each roles as r}
 										<option value={r}>{r}</option>
