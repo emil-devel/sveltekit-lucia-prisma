@@ -5,7 +5,6 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { userEmailSchema, userNameSchema } from '$lib/valibot';
-	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import { scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
@@ -17,6 +16,7 @@
 		UserRoundPen,
 		UserRoundX
 	} from '@lucide/svelte';
+	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	const iconSize: number = 16;
 
 	import { ROLES } from '$lib/permissions';
@@ -84,8 +84,9 @@
 	const canAdminManage = $derived(canManageUser(page.data.authUser, $deleteForm.id));
 
 	let deleteConfirm = $state(false);
+
+	// Form element reference for the active Switch; we update the superform store directly
 	let activeFormEl: HTMLFormElement | null = $state(null);
-	let activeCheched = $state($activeForm.active);
 </script>
 
 <svelte:head>
@@ -99,12 +100,12 @@
 	>
 		<header
 			class="flex flex-row-reverse items-center gap-4 p-4"
-			class:preset-filled-primary-300-700={activeCheched}
-			class:opacity-60={!activeCheched}
+			class:preset-filled-primary-300-700={$activeForm.active}
+			class:opacity-60={!$activeForm.active}
 		>
 			<h2 class="h4">{roleValue}</h2>
 			<p>
-				{#if activeCheched}
+				{#if $activeForm.active}
 					<UserRoundCheck />
 				{:else}
 					<UserRoundX />
@@ -208,36 +209,29 @@
 				{/if}
 				{#if canAdminManage}
 					<div class="flex justify-between gap-4">
-						<form method="post" action="?/active" use:activeEnhance bind:this={activeFormEl}>
+						<form bind:this={activeFormEl} method="post" action="?/active" use:activeEnhance>
 							<input class="input" type="hidden" name="id" value={$deleteForm.id} />
-							<p class="label-text pb-1">Active</p>
-							<Switch
-								name="active"
-								checked={activeCheched}
-								onCheckedChange={(e) => {
-									(activeFormEl?.requestSubmit(), (activeCheched = e.checked));
-								}}
-							/>
-							<!-- <label class="label">
+							<div class="flex items-center gap-2">
 								<span class="label-text">Active</span>
-								<input
-									class="checkbox"
-									type="checkbox"
+								<Switch
 									name="active"
-									bind:checked={$activeForm.active}
-									onchange={(e) => (e.currentTarget as HTMLInputElement).form?.requestSubmit()}
+									checked={$activeForm.active}
+									onCheckedChange={(e) => {
+										$activeForm.active = e.checked; // update superform store so header classes react
+										activeFormEl?.requestSubmit();
+									}}
 								/>
-							</label> -->
+							</div>
 						</form>
 						<form method="post" action="?/role" use:roleEnhance>
 							<input class="input" type="hidden" name="id" value={$deleteForm.id} />
 							<label class="label">
 								<span class="label-text">Role</span>
 								<select
-									class="select w-fit text-sm lowercase"
-									name="role"
 									onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit()}
 									bind:value={roleValue}
+									class="select w-fit text-sm lowercase"
+									name="role"
 								>
 									{#each roles as r}
 										<option value={r}>{r}</option>
