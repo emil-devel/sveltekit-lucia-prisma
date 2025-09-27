@@ -25,6 +25,8 @@
 
 	let { data }: PageProps = $props();
 
+	const { avatar, createdAt, firstName, lastName, updatedAt } = $derived(data.form);
+
 	const {
 		enhance: usernameEnhance,
 		form: usernameForm,
@@ -42,12 +44,6 @@
 	const { enhance: activeEnhance, form: activeForm } = superForm(data.form.activeForm);
 	const { enhance: roleEnhance, form: roleForm } = superForm(data.form.roleForm);
 	const { enhance: deleteEnhance, form: deleteForm } = superForm(data.form.deleteForm);
-	const { form: updatedForm } = superForm(data.form.updatedForm);
-	const { form: createdForm } = superForm(data.form.createdForm);
-	// Profile display-only forms (avatar, names) fetched via server load
-	const { form: avatarForm } = superForm(data.form.avatarForm);
-	const { form: firstNameForm } = superForm(data.form.firstNameForm);
-	const { form: lastNameForm } = superForm(data.form.lastNameForm);
 
 	const errorsUsername = $derived(($usernameErrors.username ?? []) as string[]);
 	const errorsEmail = $derived(($emailErrors.email ?? []) as string[]);
@@ -105,7 +101,9 @@
 	>
 		<header
 			class="flex flex-row-reverse items-center justify-between gap-4 p-4"
-			class:preset-filled-primary-300-700={$activeForm.active}
+			class:preset-filled-success-300-700={$activeForm.active && roleValue === 'USER'}
+			class:preset-filled-warning-300-700={$activeForm.active && roleValue === 'REDACTEUR'}
+			class:preset-filled-error-300-700={$activeForm.active && roleValue === 'ADMIN'}
 			class:opacity-60={!$activeForm.active}
 		>
 			<h2 class="h4">
@@ -118,11 +116,16 @@
 				</span>
 				{$usernameForm.username}
 			</h2>
-			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-primary-300-700">
+			<div
+				class="mt-6 -mb-16 h-24 w-24 rounded-full border-6"
+				class:border-success-300-700={roleValue === 'USER'}
+				class:border-warning-300-700={roleValue === 'REDACTEUR'}
+				class:border-error-300-700={roleValue === 'ADMIN'}
+			>
 				<Avatar class="h-full w-full bg-surface-100-900">
-					<Avatar.Image src={$avatarForm.avatar} />
+					<Avatar.Image src={avatar} />
 					<Avatar.Fallback>
-						{$firstNameForm.firstName?.at(0)}{$lastNameForm.lastName?.at(0)}
+						{firstName?.at(0)}{lastName?.at(0)}
 					</Avatar.Fallback>
 				</Avatar>
 			</div>
@@ -299,9 +302,9 @@
 			{/if}
 		</article>
 		<footer class="mt-4 flex flex-row-reverse items-center justify-between gap-4 px-4 pb-4">
-			<small class="opacity-60">Registered: {$createdForm.createdAt.toLocaleDateString()}</small>
-			{#if $updatedForm.updatedAt !== $createdForm.createdAt}
-				<small class="opacity-60">Updated: {$updatedForm.updatedAt.toLocaleDateString()}</small>
+			<small class="opacity-60">Registered: {createdAt.toLocaleDateString()}</small>
+			{#if updatedAt !== createdAt}
+				<small class="opacity-60">Updated: {updatedAt.toLocaleDateString()}</small>
 			{/if}
 		</footer>
 	</div>
@@ -313,7 +316,10 @@
 			Users
 		</a>
 		{#if isAdmin || isSelf}
-			<a class="btn preset-tonal btn-sm" href="/users/{$usernameForm.username}/profile">
+			<a
+				class="btn preset-filled-secondary-300-700 btn-sm"
+				href="/users/{$usernameForm.username}/profile"
+			>
 				Profile
 				<UserRoundPen size={iconSize} />
 			</a>

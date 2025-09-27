@@ -9,12 +9,7 @@ import {
 	roleUserSchema,
 	userNameSchema,
 	userIdSchema,
-	userEmailSchema,
-	updatedAtSchema,
-	createdAtSchema,
-	profileAvatarSchema,
-	profileFirstNameSchema,
-	profileLastNameSchema
+	userEmailSchema
 } from '$lib/valibot';
 
 export const load = (async (event) => {
@@ -37,51 +32,16 @@ export const load = (async (event) => {
 		if (!user) throw redirect(302, '/users');
 		if (!user.profile?.id) throw redirect(302, '/users'); // invariant: profile should exist
 
-		const {
-			id: userId,
-			username: uName,
-			email: uEmail,
-			active: uActive,
-			role: uRole,
-			updatedAt,
-			createdAt
-		} = user;
+		const { updatedAt, createdAt } = user;
+		const { avatar, firstName, lastName } = user.profile;
+		const { id: userId, username: uName, email: uEmail, active: uActive, role: uRole } = user;
 
-		const normalizedProfile = {
-			profileId: user.profile.id,
-			avatar: user.profile.avatar ?? '',
-			firstName: user.profile.firstName ?? '',
-			lastName: user.profile.lastName ?? ''
-		};
-
-		const [
-			usernameForm,
-			emailForm,
-			activeForm,
-			roleForm,
-			deleteForm,
-			updatedForm,
-			createdForm,
-			profileAvatarForm,
-			firstNameForm,
-			lastNameForm
-		] = await Promise.all([
+		const [usernameForm, emailForm, activeForm, roleForm, deleteForm] = await Promise.all([
 			superValidate({ id: userId, username: uName }, valibot(userNameSchema)),
 			superValidate({ id: userId, email: uEmail }, valibot(userEmailSchema)),
 			superValidate({ id: userId, active: uActive }, valibot(activeUserSchema)),
 			superValidate({ id: userId, role: uRole }, valibot(roleUserSchema)),
-			superValidate({ id: userId }, valibot(userIdSchema)),
-			superValidate({ updatedAt }, valibot(updatedAtSchema)),
-			superValidate({ createdAt }, valibot(createdAtSchema)),
-			superValidate(normalizedProfile, valibot(profileAvatarSchema)),
-			superValidate(
-				{ id: normalizedProfile.profileId, firstName: normalizedProfile.firstName },
-				valibot(profileFirstNameSchema)
-			),
-			superValidate(
-				{ id: normalizedProfile.profileId, lastName: normalizedProfile.lastName },
-				valibot(profileLastNameSchema)
-			)
+			superValidate({ id: userId }, valibot(userIdSchema))
 		]);
 
 		return {
@@ -90,11 +50,11 @@ export const load = (async (event) => {
 			activeForm,
 			roleForm,
 			deleteForm,
-			updatedForm,
-			createdForm,
-			avatarForm: profileAvatarForm,
-			firstNameForm,
-			lastNameForm
+			updatedAt,
+			createdAt,
+			avatar,
+			firstName,
+			lastName
 		};
 	};
 
