@@ -13,7 +13,7 @@ export const load = (async (event) => {
 				role: true,
 				username: true,
 				createdAt: true,
-				profile: { select: { avatar: true } }
+				profile: { select: { avatar: true, firstName: true, lastName: true } }
 			},
 			orderBy: { username: 'asc' }
 		});

@@ -11,7 +11,10 @@ import {
 	userIdSchema,
 	userEmailSchema,
 	updatedAtSchema,
-	createdAtSchema
+	createdAtSchema,
+	profileAvatarSchema,
+	profileFirstNameSchema,
+	profileLastNameSchema
 } from '$lib/valibot';
 
 export const load = (async (event) => {
@@ -27,13 +30,15 @@ export const load = (async (event) => {
 				username: true,
 				email: true,
 				updatedAt: true,
-				createdAt: true
+				createdAt: true,
+				profile: { select: { id: true, avatar: true, firstName: true, lastName: true } }
 			}
 		});
 		if (!user) throw redirect(302, '/users');
+		if (!user.profile?.id) throw redirect(302, '/users'); // invariant: profile should exist
 
 		const {
-			id,
+			id: userId,
 			username: uName,
 			email: uEmail,
 			active: uActive,
@@ -42,18 +47,55 @@ export const load = (async (event) => {
 			createdAt
 		} = user;
 
-		const [usernameForm, emailForm, activeForm, roleForm, deleteForm, updatedForm, createdForm] =
-			await Promise.all([
-				superValidate({ id, username: uName }, valibot(userNameSchema)),
-				superValidate({ id, email: uEmail }, valibot(userEmailSchema)),
-				superValidate({ id, active: uActive }, valibot(activeUserSchema)),
-				superValidate({ id, role: uRole }, valibot(roleUserSchema)),
-				superValidate({ id }, valibot(userIdSchema)),
-				superValidate({ updatedAt }, valibot(updatedAtSchema)),
-				superValidate({ createdAt }, valibot(createdAtSchema))
-			]);
+		const normalizedProfile = {
+			profileId: user.profile.id,
+			avatar: user.profile.avatar ?? '',
+			firstName: user.profile.firstName ?? '',
+			lastName: user.profile.lastName ?? ''
+		};
 
-		return { usernameForm, emailForm, activeForm, roleForm, deleteForm, updatedForm, createdForm };
+		const [
+			usernameForm,
+			emailForm,
+			activeForm,
+			roleForm,
+			deleteForm,
+			updatedForm,
+			createdForm,
+			profileAvatarForm,
+			firstNameForm,
+			lastNameForm
+		] = await Promise.all([
+			superValidate({ id: userId, username: uName }, valibot(userNameSchema)),
+			superValidate({ id: userId, email: uEmail }, valibot(userEmailSchema)),
+			superValidate({ id: userId, active: uActive }, valibot(activeUserSchema)),
+			superValidate({ id: userId, role: uRole }, valibot(roleUserSchema)),
+			superValidate({ id: userId }, valibot(userIdSchema)),
+			superValidate({ updatedAt }, valibot(updatedAtSchema)),
+			superValidate({ createdAt }, valibot(createdAtSchema)),
+			superValidate(normalizedProfile, valibot(profileAvatarSchema)),
+			superValidate(
+				{ id: normalizedProfile.profileId, firstName: normalizedProfile.firstName },
+				valibot(profileFirstNameSchema)
+			),
+			superValidate(
+				{ id: normalizedProfile.profileId, lastName: normalizedProfile.lastName },
+				valibot(profileLastNameSchema)
+			)
+		]);
+
+		return {
+			usernameForm,
+			emailForm,
+			activeForm,
+			roleForm,
+			deleteForm,
+			updatedForm,
+			createdForm,
+			avatarForm: profileAvatarForm,
+			firstNameForm,
+			lastNameForm
+		};
 	};
 
 	return { form: await getUserForms(event.params.username) };

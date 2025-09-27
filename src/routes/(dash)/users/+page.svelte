@@ -2,17 +2,7 @@
 	import type { PageProps } from './$types';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
-	import {
-		ArrowRight,
-		Check,
-		Funnel,
-		FunnelX,
-		Search,
-		SearchX,
-		UserRound,
-		UsersRound,
-		X
-	} from '@lucide/svelte';
+	import { Check, Funnel, FunnelX, Search, SearchX, UsersRound, X } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
 	const users = $derived(data.users);
@@ -47,55 +37,56 @@
 					<th>role</th>
 					<th>active</th>
 					<th>registred</th>
-					<th>view</th>
 				</tr>
 			</thead>
 			<tbody class="[&>tr]:hover:preset-tonal-primary">
 				{#each users as user (user.id)}
-					<tr>
+					<tr class="relative">
 						<td>
 							<Avatar class="h-10 w-10 text-xs">
-								<Avatar.Image src={user.profile?.avatar ?? undefined} />
-								<Avatar.Fallback>{user.username}</Avatar.Fallback>
+								<Avatar.Image src={user.profile?.avatar} />
+								<Avatar.Fallback
+									>{user.profile?.firstName?.at(0)}{user.profile?.lastName?.at(0)}</Avatar.Fallback
+								>
 							</Avatar>
+							<a
+								class="absolute top-0 left-0 h-full w-full"
+								href="/users/{user.username}"
+								aria-label="anchor"
+							></a>
 						</td>
 						<td>
-							<span
-								class:text-success-500={user.role === 'USER'}
-								class:text-warning-500={user.role === 'REDACTEUR'}
-								class:text-error-500={user.role === 'ADMIN'}
-							>
+							<span class="opacity-80">
 								{user.username}
 							</span>
 						</td>
 						<td class="lowercase">
 							<span
-								class:text-success-500={user.role === 'USER'}
-								class:text-warning-500={user.role === 'REDACTEUR'}
-								class:text-error-500={user.role === 'ADMIN'}
+								class:text-success-300-700={user.role === 'USER'}
+								class:text-warning-300-700={user.role === 'REDACTEUR'}
+								class:text-error-300-700={user.role === 'ADMIN'}
 							>
 								{user.role}
 							</span>
 						</td>
 						<td>
-							<Switch controlWidth="w-6" checked={user.active} compact>
+							<Switch
+								checked={user.active}
+								controlWidth="w-6"
+								controlActive="preset-filled-primary-300-700"
+								compact
+							>
 								{#snippet inactiveChild()}<X size="14" />{/snippet}
 								{#snippet activeChild()}<Check size="14" />{/snippet}
 							</Switch>
 						</td>
 						<td><span class="code">{user.createdAt.toLocaleDateString()}</span></td>
-						<td>
-							<a class="badge preset-filled-primary-500" href="/users/{user.username}">
-								<UserRound size="20" />
-								<ArrowRight size="20" />
-							</a>
-						</td>
 					</tr>
 				{/each}
 			</tbody>
 			<tfoot>
 				<tr>
-					<td colspan="4"></td>
+					<td colspan="3"></td>
 					<td>Total:</td>
 					<td class="text-right"
 						><span class="code">{countUser}</span> User{countUser === 1 ? '' : 's'}</td

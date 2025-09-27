@@ -5,6 +5,8 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { userEmailSchema, userNameSchema } from '$lib/valibot';
+	import { Switch } from '@skeletonlabs/skeleton-svelte';
+	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
 	import { scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
@@ -16,7 +18,6 @@
 		UserRoundPen,
 		UserRoundX
 	} from '@lucide/svelte';
-	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	const iconSize: number = 16;
 
 	import { ROLES } from '$lib/permissions';
@@ -43,6 +44,10 @@
 	const { enhance: deleteEnhance, form: deleteForm } = superForm(data.form.deleteForm);
 	const { form: updatedForm } = superForm(data.form.updatedForm);
 	const { form: createdForm } = superForm(data.form.createdForm);
+	// Profile display-only forms (avatar, names) fetched via server load
+	const { form: avatarForm } = superForm(data.form.avatarForm);
+	const { form: firstNameForm } = superForm(data.form.firstNameForm);
+	const { form: lastNameForm } = superForm(data.form.lastNameForm);
 
 	const errorsUsername = $derived(($usernameErrors.username ?? []) as string[]);
 	const errorsEmail = $derived(($emailErrors.email ?? []) as string[]);
@@ -99,23 +104,33 @@
 		class="block max-w-md divide-y divide-surface-200-800 card border-[1px] border-surface-200-800 preset-filled-surface-100-900"
 	>
 		<header
-			class="flex flex-row-reverse items-center gap-4 p-4"
+			class="flex flex-row-reverse items-center justify-between gap-4 p-4"
 			class:preset-filled-primary-300-700={$activeForm.active}
 			class:opacity-60={!$activeForm.active}
 		>
-			<h2 class="h4">{roleValue}</h2>
-			<p>
-				{#if $activeForm.active}
-					<UserRoundCheck />
-				{:else}
-					<UserRoundX />
-				{/if}
-			</p>
+			<h2 class="h4">
+				<span>
+					{#if $activeForm.active}
+						<UserRoundCheck />
+					{:else}
+						<UserRoundX />
+					{/if}
+				</span>
+				{$usernameForm.username}
+			</h2>
+			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-primary-300-700">
+				<Avatar class="h-full w-full bg-surface-100-900">
+					<Avatar.Image src={$avatarForm.avatar} />
+					<Avatar.Fallback>
+						{$firstNameForm.firstName?.at(0)}{$lastNameForm.lastName?.at(0)}
+					</Avatar.Fallback>
+				</Avatar>
+			</div>
 		</header>
 		<article class="p-4 pb-8">
 			<div class="space-y-8">
-				<h1 class="h-10 text-right h6">
-					{$usernameForm.username}
+				<h1 class="h-10 text-right h6 lowercase">
+					{roleValue}
 				</h1>
 				{#if isSelf}
 					<form method="post" action="?/username" use:usernameEnhance>
@@ -211,7 +226,7 @@
 					<div class="flex justify-between gap-4">
 						<form bind:this={activeFormEl} method="post" action="?/active" use:activeEnhance>
 							<input class="input" type="hidden" name="id" value={$deleteForm.id} />
-							<div class="flex items-center gap-2">
+							<div class="flex flex-col gap-2">
 								<span class="label-text">Active</span>
 								<Switch
 									name="active"
@@ -244,7 +259,6 @@
 			</div>
 			{#if canAdminManage}
 				<div class="mt-8 h-16 overflow-y-hidden border-t-[1px] border-surface-200-800 py-8">
-					<!-- {#key deleteConfirm} -->
 					{#if deleteConfirm}
 						<div
 							class="flex items-center justify-center gap-2"
@@ -281,7 +295,6 @@
 							</button>
 						</div>
 					{/if}
-					<!-- {/key} -->
 				</div>
 			{/if}
 		</article>

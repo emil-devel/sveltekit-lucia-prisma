@@ -119,10 +119,10 @@
 		class="divide-y divide-surface-200-800 card border-[1px] border-surface-200-800 preset-filled-surface-100-900"
 	>
 		<header
-			class="flex flex-row-reverse items-center justify-between gap-4 preset-filled-primary-300-700 p-4"
+			class="flex flex-row-reverse items-center justify-between gap-4 preset-filled-secondary-300-700 p-4"
 		>
 			<h1 class="h4">{$form.name}</h1>
-			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-primary-300-700">
+			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-secondary-300-700">
 				<Avatar class="h-full w-full bg-surface-100-900">
 					<Avatar.Image src={$form.avatar} />
 					<Avatar.Fallback

@@ -87,3 +87,6 @@ export const profileSchema = object({
 	phone: optional(string()),
 	bio: optional(string())
 });
+
+// Display-only avatar schema (no phone/bio/name grouping needed on username page)
+export const profileAvatarSchema = object({ id: string(), avatar: optional(string()) });
