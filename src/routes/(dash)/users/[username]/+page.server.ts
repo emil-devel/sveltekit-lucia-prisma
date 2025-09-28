@@ -45,6 +45,7 @@ export const load = (async (event) => {
 		]);
 
 		return {
+			id: userId,
 			usernameForm,
 			emailForm,
 			activeForm,

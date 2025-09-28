@@ -121,7 +121,14 @@
 		<header
 			class="flex flex-row-reverse items-center justify-between gap-4 preset-filled-secondary-300-700 p-4"
 		>
-			<h1 class="h4">{$form.name}</h1>
+			<h1 class="h4">
+				{#if isSelf}
+					<UserRoundPen size={32} />
+				{:else}
+					<UserRound size={32} />
+				{/if}
+				<span>{$form.name}</span>
+			</h1>
 			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-secondary-300-700">
 				<Avatar class="h-full w-full bg-surface-100-900">
 					<Avatar.Image src={$form.avatar} />
@@ -134,7 +141,6 @@
 		<article class="p-4 pb-8">
 			<div class="space-y-8">
 				<h2 class="py-4 text-right h6">
-					<UserRoundPen />
 					<span>Profile</span>
 				</h2>
 				{#if isSelf}
