@@ -10,7 +10,6 @@
 	let { data }: { data: PageServerData } = $props();
 
 	const { enhance, errors, form } = superForm(data.form, {
-		// dataType: 'json',
 		validators: valibot(registerSchema)
 	});
 
