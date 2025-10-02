@@ -106,9 +106,9 @@
 			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-secondary-300-700">
 				<Avatar class="h-full w-full bg-surface-100-900">
 					<Avatar.Image src={$form.avatar} />
-					<Avatar.Fallback
-						>{$firstNameForm.firstName?.at(0)}{$lastNameForm.lastName?.at(0)}</Avatar.Fallback
-					>
+					<Avatar.Fallback>
+						{$firstNameForm.firstName?.at(0)}{$lastNameForm.lastName?.at(0)}
+					</Avatar.Fallback>
 				</Avatar>
 			</div>
 		</header>
