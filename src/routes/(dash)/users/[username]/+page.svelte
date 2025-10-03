@@ -24,7 +24,7 @@
 
 	let { data }: PageProps = $props();
 
-	const { id, avatar, createdAt, firstName, lastName, updatedAt } = $derived(data.form);
+	const { id, createdAt, firstName, lastName, updatedAt } = $derived(data.form);
 
 	const {
 		enhance: usernameEnhance,
@@ -92,7 +92,7 @@
 				class:border-error-300-700={$roleForm.role === 'ADMIN'}
 			>
 				<Avatar class="h-full w-full bg-surface-100-900">
-					<Avatar.Image src={avatar} />
+					<Avatar.Image src={data.form.avatar} />
 					<Avatar.Fallback>
 						{firstName?.at(0)}{lastName?.at(0)}
 					</Avatar.Fallback>

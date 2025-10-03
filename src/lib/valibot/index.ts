@@ -96,6 +96,22 @@ export const ROLE_ENUM = {
 export const roleUserSchema = object({ id: string(), role: enum_(ROLE_ENUM) });
 
 // Per-field schemas for profile page partial updates
+export const profileAvatarSchema = object({
+	id: string(),
+	avatar: optional(
+		pipe(
+			string(),
+			// Rough size cap: ~250 KB base64 (DB bloat awareness); adjust as needed
+			maxLength(350000, 'Avatar image too large'),
+			// Data URL enforced (only common safe raster formats)
+			// Allow either full data URL or bare base64 (we'll normalize server-side)
+			regex(
+				/^(?:data:image\/(?:png|jpeg|jpg|webp|gif);base64,)?[A-Za-z0-9+/=]+$/,
+				'Invalid image data (expected base64, optionally prefixed with data:image/<type>;base64,)'
+			)
+		)
+	)
+});
 export const profileFirstNameSchema = object({
 	id: string(),
 	firstName: optional(
@@ -183,6 +199,3 @@ export const profileSchema = object({
 	phone: optional(string()),
 	bio: optional(string())
 });
-
-// Display-only avatar schema (no phone/bio/name grouping needed on username page)
-export const profileAvatarSchema = object({ id: string(), avatar: optional(string()) });

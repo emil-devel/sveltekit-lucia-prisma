@@ -5,7 +5,7 @@
 	import { isSelf as isSelfUtil } from '$lib/permissions';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import {
-		profileSchema,
+		profileAvatarSchema,
 		profileFirstNameSchema,
 		profileLastNameSchema,
 		profilePhoneSchema,
@@ -15,12 +15,18 @@
 	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
 	import { slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import { tick } from 'svelte';
 
 	const iconSize: number = 16;
 
 	let { data }: PageProps = $props();
 
-	const { form } = superForm(data.form.profileForm, { validators: valibot(profileSchema) });
+	// Destructure basic fields
+	const { id, name, userId } = $state(data.form ?? '');
+	// Forms
+	const { enhance: avatarEnhance, form: avatarForm } = superForm(data.form.avatarForm, {
+		validators: valibot(profileAvatarSchema)
+	});
 	const {
 		enhance: firstNameEnhance,
 		form: firstNameForm,
@@ -46,7 +52,7 @@
 	const errorsPhone = $derived(($phoneErrors.phone ?? []) as string[]);
 
 	// Use helper-based permission check like on the username page
-	const isSelf = $derived(isSelfUtil(page.data.authUser.id, $form.userId));
+	const isSelf = $derived(isSelfUtil(page.data.authUser.id, userId));
 
 	// Normalized phone for "tel: link" after passing the schema.
 	const normalizedPhone = $derived(() => {
@@ -84,11 +90,11 @@
 </script>
 
 <svelte:head>
-	<title>Users Profile: {$form.name}</title>
+	<title>Users Profile: {name}</title>
 	<meta name="description" content="Seiten Beschreibung" />
 </svelte:head>
 
-<section class="m-auto max-w-sm space-y-4">
+<section class="m-auto max-w-xl space-y-4">
 	<div
 		class="divide-y divide-surface-200-800 card border-[1px] border-surface-200-800 preset-filled-surface-100-900"
 	>
@@ -101,11 +107,11 @@
 				{:else}
 					<UserRound size={32} />
 				{/if}
-				<span>{$form.name}</span>
+				<span>{name}</span>
 			</h1>
 			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-secondary-300-700">
 				<Avatar class="h-full w-full bg-surface-100-900">
-					<Avatar.Image src={$form.avatar} />
+					<Avatar.Image src={$avatarForm.avatar} />
 					<Avatar.Fallback>
 						{$firstNameForm.firstName?.at(0)}{$lastNameForm.lastName?.at(0)}
 					</Avatar.Fallback>
@@ -119,7 +125,7 @@
 				</h2>
 				{#if isSelf}
 					<form method="post" action="?/firstName" use:firstNameEnhance>
-						<input class="input" type="hidden" name="id" value={$firstNameForm.id} />
+						<input class="input" type="hidden" name="id" value={id} />
 						<label class="label label-text" for="firstName">First Name</label>
 						<div class="input-group grid-cols-[auto_1fr_auto]">
 							<div class="ig-cell preset-tonal py-1.5">
@@ -150,7 +156,7 @@
 						</div>
 					{/if}
 					<form method="post" action="?/lastName" use:lastNameEnhance>
-						<input class="input" type="hidden" name="id" value={$lastNameForm.id} />
+						<input class="input" type="hidden" name="id" value={id} />
 						<label class="label label-text" for="lastName">Last Name</label>
 						<div class="input-group grid-cols-[auto_1fr_auto]">
 							<div class="ig-cell preset-tonal py-1.5">
@@ -180,7 +186,7 @@
 						</div>
 					{/if}
 					<form method="post" action="?/phone" use:phoneEnhance>
-						<input class="input" type="hidden" name="id" value={$phoneForm.id} />
+						<input class="input" type="hidden" name="id" value={id} />
 						<label class="label label-text" for="phone">Phone</label>
 						<div class="input-group grid-cols-[auto_1fr_auto]">
 							<div class="ig-cell preset-tonal py-1.5">
@@ -246,7 +252,7 @@
 							action="?/bio"
 							use:bioEnhance
 						>
-							<input class="input" type="hidden" name="id" value={$bioForm.id} />
+							<input class="input" type="hidden" name="id" value={id} />
 							<label class="label" for="id"><span class="label-text">Bio</span></label>
 							<!-- bio value provided via superforms JSON (kept in sync in script) -->
 							<button class="btn preset-tonal btn-sm" type="submit"> Submit </button>
@@ -276,9 +282,9 @@
 	<div
 		class="mt-8 flex items-center justify-between gap-4 border-t-[1px] border-surface-200-800 p-2"
 	>
-		<a class="btn preset-tonal btn-sm" href="/users/{$form.name}">
+		<a class="btn preset-tonal btn-sm" href="/users/{name}">
 			<ArrowBigLeft size={iconSize} />
-			{$form.name}
+			{name}
 		</a>
 	</div>
 </section>
