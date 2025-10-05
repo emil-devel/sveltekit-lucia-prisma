@@ -37,8 +37,7 @@
 		errors: avatarErrors,
 		form: avatarForm
 	} = superForm(data.form.avatarForm, {
-		validators: valibot(profileAvatarSchema),
-		validationMethod: 'oninput'
+		validators: valibot(profileAvatarSchema)
 	});
 	const {
 		enhance: firstNameEnhance,
@@ -105,28 +104,40 @@
 
 	// FileUpload Component
 	let avatarFormEl: HTMLFormElement | null = $state(null);
-
-	const avatarSelect = async (details: any) => {
-		const file = (await details?.files?.[0]) ?? details?.file ?? details?.acceptedFiles?.[0];
+	let avatarPreview: string | null | undefined = $state(null);
+	const avatarSelect = (details: any) => {
+		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
 		if (file instanceof File) {
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				const dataUrl = e.target?.result;
 				if (typeof dataUrl === 'string') {
-					$avatarForm.avatar = dataUrl; // bind into superform state
+					avatarPreview = dataUrl;
 				}
 			};
 			reader.readAsDataURL(file);
 		}
 	};
-	const avatarUpload = () => {
-		setTimeout(() => {
-			avatarFormEl?.requestSubmit();
-		}, 500);
+	const avatarUpload = (details: any) => {
+		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
+		if (file instanceof File) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const dataUrl = e.target?.result;
+				if (typeof dataUrl === 'string') {
+					avatarPreview = dataUrl;
+				}
+			};
+			reader.readAsDataURL(file);
+		}
+		if (errorsAvatar.length === 0) {
+			setTimeout(() => {
+				avatarFormEl?.requestSubmit();
+			}, 500);
+		}
 	};
 	const avatarClear = (details: any) => {
 		details?.fileRejectDetails();
-		avatarUpload();
 	};
 </script>
 
@@ -173,14 +184,10 @@
 						use:avatarEnhance
 					>
 						<input type="hidden" name="id" value={id} />
-						<input type="hidden" name="avatar" bind:value={$avatarForm.avatar} />
+						<input type="hidden" name="avatar" bind:value={avatarPreview} />
 						<div class="grid grid-cols-2 gap-4">
 							<div class="flex flex-col items-center justify-center">
-								<img
-									src={$avatarForm.avatar}
-									alt="Avatar Preview"
-									class="max-w-full object-cover"
-								/>
+								<img src={avatarPreview} alt="Avatar Preview" class="max-w-full object-cover" />
 							</div>
 							<FileUpload
 								maxFiles={1}
@@ -195,17 +202,19 @@
 							</FileUpload>
 						</div>
 					</form>
-					<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
-						{#each errorsAvatar as message, i (i)}
-							<p
-								class="card preset-filled-error-300-700 p-2"
-								transition:slide={{ duration: 140 }}
-								animate:flip={{ duration: 160 }}
-							>
-								{message}
-							</p>
-						{/each}
-					</div>
+					{#if errorsAvatar && $avatarForm.avatar}
+						<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
+							{#each errorsAvatar as message, i (i)}
+								<p
+									class="card preset-filled-error-300-700 p-2"
+									transition:slide={{ duration: 140 }}
+									animate:flip={{ duration: 160 }}
+								>
+									{message}
+								</p>
+							{/each}
+						</div>
+					{/if}
 					<form method="post" action="?/firstName" use:firstNameEnhance>
 						<input class="input" type="hidden" name="id" value={id} />
 						<label class="label label-text" for="firstName">First Name</label>
@@ -223,7 +232,6 @@
 							<button class="ig-btn preset-tonal btn-sm" type="submit"> Submit </button>
 						</div>
 					</form>
-
 					{#if errorsFirstName && $firstNameForm.firstName}
 						<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
 							{#each errorsFirstName as message, i (i)}
