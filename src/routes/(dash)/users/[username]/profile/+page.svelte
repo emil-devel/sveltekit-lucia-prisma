@@ -2,6 +2,10 @@
 	import type { PageProps } from './$types';
 	import { page } from '$app/state';
 	import { superForm } from 'sveltekit-superforms';
+	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
+	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
+	import { slide } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 	import { isSelf as isSelfUtil } from '$lib/permissions';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import {
@@ -11,21 +15,30 @@
 		profilePhoneSchema,
 		profileBioSchema
 	} from '$lib/valibot';
-	import { ArrowBigLeft, Phone, UserRound, UserRoundPen, X } from '@lucide/svelte';
-	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
-	import { slide } from 'svelte/transition';
-	import { flip } from 'svelte/animate';
-	import { tick } from 'svelte';
-
+	import {
+		ArrowBigLeft,
+		CircleX,
+		ImagePlus,
+		Paperclip,
+		Phone,
+		UserRound,
+		UserRoundPen,
+		X
+	} from '@lucide/svelte';
 	const iconSize: number = 16;
 
 	let { data }: PageProps = $props();
 
 	// Destructure basic fields
-	const { id, name, userId } = $state(data.form ?? '');
+	const { id, name, userId } = data.form;
 	// Forms
-	const { enhance: avatarEnhance, form: avatarForm } = superForm(data.form.avatarForm, {
-		validators: valibot(profileAvatarSchema)
+	const {
+		enhance: avatarEnhance,
+		errors: avatarErrors,
+		form: avatarForm
+	} = superForm(data.form.avatarForm, {
+		validators: valibot(profileAvatarSchema),
+		validationMethod: 'oninput'
 	});
 	const {
 		enhance: firstNameEnhance,
@@ -47,6 +60,7 @@
 		dataType: 'json'
 	});
 
+	const errorsAvatar = $derived(($avatarErrors.avatar ?? []) as string[]);
 	const errorsFirstName = $derived(($firstNameErrors.firstName ?? []) as string[]);
 	const errorsLastName = $derived(($lastNameErrors.lastName ?? []) as string[]);
 	const errorsPhone = $derived(($phoneErrors.phone ?? []) as string[]);
@@ -55,7 +69,7 @@
 	const isSelf = $derived(isSelfUtil(page.data.authUser.id, userId));
 
 	// Normalized phone for "tel: link" after passing the schema.
-	const normalizedPhone = $derived(() => {
+	const normalizedPhone = $derived.by(() => {
 		let raw = $phoneForm.phone?.trim();
 		if (!raw) return '';
 		// Remove spaces
@@ -74,6 +88,7 @@
 	let body = $state($bioForm.bio ?? '');
 	// Editor instance binding
 	import type { Editor } from '@tiptap/core';
+	import { file } from 'valibot';
 	let editor = $state<Editor | undefined>();
 	// Always up-to-date HTML extracted from the editor
 	const htmlContent = $derived(editor?.getHTML() ?? body);
@@ -87,6 +102,32 @@
 			}
 		}
 	});
+
+	// FileUpload Component
+	let avatarFormEl: HTMLFormElement | null = $state(null);
+
+	const avatarSelect = async (details: any) => {
+		const file = (await details?.files?.[0]) ?? details?.file ?? details?.acceptedFiles?.[0];
+		if (file instanceof File) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const dataUrl = e.target?.result;
+				if (typeof dataUrl === 'string') {
+					$avatarForm.avatar = dataUrl; // bind into superform state
+				}
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+	const avatarUpload = () => {
+		setTimeout(() => {
+			avatarFormEl?.requestSubmit();
+		}, 500);
+	};
+	const avatarClear = (details: any) => {
+		details?.fileRejectDetails();
+		avatarUpload();
+	};
 </script>
 
 <svelte:head>
@@ -124,6 +165,47 @@
 					<span>Profile</span>
 				</h2>
 				{#if isSelf}
+					<form
+						bind:this={avatarFormEl}
+						method="post"
+						action="?/avatar"
+						enctype="multipart/form-data"
+						use:avatarEnhance
+					>
+						<input type="hidden" name="id" value={id} />
+						<input type="hidden" name="avatar" bind:value={$avatarForm.avatar} />
+						<div class="grid grid-cols-2 gap-4">
+							<div class="flex flex-col items-center justify-center">
+								<img
+									src={$avatarForm.avatar}
+									alt="Avatar Preview"
+									class="max-w-full object-cover"
+								/>
+							</div>
+							<FileUpload
+								maxFiles={1}
+								subtext="Attach your file."
+								onFileChange={avatarSelect}
+								onFileAccept={avatarUpload}
+								onFileReject={avatarClear}
+							>
+								{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
+								{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
+								{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
+							</FileUpload>
+						</div>
+					</form>
+					<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
+						{#each errorsAvatar as message, i (i)}
+							<p
+								class="card preset-filled-error-300-700 p-2"
+								transition:slide={{ duration: 140 }}
+								animate:flip={{ duration: 160 }}
+							>
+								{message}
+							</p>
+						{/each}
+					</div>
 					<form method="post" action="?/firstName" use:firstNameEnhance>
 						<input class="input" type="hidden" name="id" value={id} />
 						<label class="label label-text" for="firstName">First Name</label>
@@ -235,8 +317,8 @@
 						<div class="input-group grid-cols-[auto_1fr_auto]">
 							<div class="ig-cell preset-tonal py-1.5"><Phone size={iconSize} /></div>
 							<span class="ig-input text-sm">
-								{#if normalizedPhone()}
-									<a href={'tel:' + normalizedPhone()}>{$phoneForm.phone}</a>
+								{#if normalizedPhone}
+									<a href={'tel:' + normalizedPhone}>{$phoneForm.phone}</a>
 								{:else}
 									{$phoneForm.phone}
 								{/if}

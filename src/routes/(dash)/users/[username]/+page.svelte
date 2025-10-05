@@ -24,20 +24,20 @@
 
 	let { data }: PageProps = $props();
 
-	const { id, createdAt, firstName, lastName, updatedAt } = $derived(data.form);
+	const { id, createdAt, firstName, lastName, updatedAt } = data.form;
 
 	const {
 		enhance: usernameEnhance,
-		form: usernameForm,
-		errors: usernameErrors
+		errors: usernameErrors,
+		form: usernameForm
 	} = superForm(data.form.usernameForm, {
 		validators: valibot(userNameSchema),
 		validationMethod: 'oninput'
 	});
 	const {
 		enhance: emailEnhance,
-		form: emailForm,
-		errors: emailErrors
+		errors: emailErrors,
+		form: emailForm
 	} = superForm(data.form.emailForm, {
 		validators: valibot(userEmailSchema),
 		validationMethod: 'oninput'

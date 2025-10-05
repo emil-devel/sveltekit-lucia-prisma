@@ -64,6 +64,22 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
+	avatar: async (event) => {
+		const avatarForm = await superValidate(event.request, valibot(profileAvatarSchema));
+		if (!avatarForm.valid) return fail(400, { avatarForm });
+		const viewer = event.locals.authUser;
+		if (!viewer) throw redirect(302, '/login');
+		const { id, avatar } = avatarForm.data;
+		try {
+			await prisma.profile.update({ where: { id }, data: { avatar } });
+		} catch (error) {
+			return setFlash(
+				{ type: 'error', message: error instanceof Error ? error.message : String(error) },
+				event.cookies
+			);
+		}
+		setFlash({ type: 'success', message: 'Avatar updated.' }, event.cookies);
+	},
 	firstName: async (event) => {
 		const firstNameForm = await superValidate(event.request, valibot(profileFirstNameSchema));
 		if (!firstNameForm.valid) return fail(400, { firstNameForm });

@@ -106,8 +106,8 @@ export const profileAvatarSchema = object({
 			// Data URL enforced (only common safe raster formats)
 			// Allow either full data URL or bare base64 (we'll normalize server-side)
 			regex(
-				/^(?:data:image\/(?:png|jpeg|jpg|webp|gif);base64,)?[A-Za-z0-9+/=]+$/,
-				'Invalid image data (expected base64, optionally prefixed with data:image/<type>;base64,)'
+				/^(?:data:image\/[png,jpeg,jpg,webp,gif,svg+xml]+;base64,)?[A-Za-z0-9+/=]+$/,
+				'Invalid image data. Expected base64 (PNG, JPEG, JPG, WEBP, GIF or SVG)'
 			)
 		)
 	)
