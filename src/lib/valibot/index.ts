@@ -12,7 +12,10 @@ import {
 	date,
 	optional,
 	enum_,
-	maxLength
+	maxLength,
+	file,
+	mimeType,
+	maxSize
 } from 'valibot';
 // Keep role values in sync with $lib/permissions/ROLES and Prisma enum
 
@@ -102,7 +105,7 @@ export const profileAvatarSchema = object({
 		pipe(
 			string(),
 			// Rough size cap: ~250 KB base64 (DB bloat awareness); adjust as needed
-			maxLength(350000, 'Avatar image too large'),
+			maxLength(350000, 'Avatar image too large (max ~250KB)!'),
 			// Data URL enforced (only common safe raster formats)
 			// Allow either full data URL or bare base64 (we'll normalize server-side)
 			regex(
@@ -112,6 +115,15 @@ export const profileAvatarSchema = object({
 		)
 	)
 });
+export const new_profileAvatarSchema = object({
+	id: string(),
+	avatar: pipe(
+		file('Please select an image file.'),
+		mimeType(['image/jpeg', 'image/png'], 'Please select a JPEG or PNG file.'),
+		maxSize(1024 * 1024 * 10, 'Please select a file smaller than 10 MB.')
+	)
+});
+
 export const profileFirstNameSchema = object({
 	id: string(),
 	firstName: optional(

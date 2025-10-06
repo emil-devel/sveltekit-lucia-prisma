@@ -38,6 +38,8 @@
 		form: avatarForm
 	} = superForm(data.form.avatarForm, {
 		validators: valibot(profileAvatarSchema)
+		// Ensure multipart submission so the File is included
+		// dataType: 'form'
 	});
 	const {
 		enhance: firstNameEnhance,
@@ -103,42 +105,24 @@
 	});
 
 	// FileUpload Component
+	// Submit the form only when a file is selected; do not mutate the bound avatar value here.
+	// This ensures the header image updates only after a successful server response.
 	let avatarFormEl: HTMLFormElement | null = $state(null);
-	let avatarPreview: string | null | undefined = $state(null);
-	const avatarSelect = (details: any) => {
-		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
-		if (file instanceof File) {
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				const dataUrl = e.target?.result;
-				if (typeof dataUrl === 'string') {
-					avatarPreview = dataUrl;
-				}
-			};
-			reader.readAsDataURL(file);
-		}
-	};
 	const avatarUpload = (details: any) => {
 		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
-		if (file instanceof File) {
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				const dataUrl = e.target?.result;
-				if (typeof dataUrl === 'string') {
-					avatarPreview = dataUrl;
-				}
-			};
-			reader.readAsDataURL(file);
+		if (!(file instanceof File)) {
+			// Likely a removal/clear action — don't submit and don't change preview state.
+			return;
 		}
-		if (errorsAvatar.length === 0) {
-			setTimeout(() => {
-				avatarFormEl?.requestSubmit();
-			}, 500);
-		}
+		// Defer submit to ensure the underlying input has been updated by FileUpload
+		setTimeout(() => {
+			avatarFormEl?.requestSubmit();
+		}, 0);
 	};
-	const avatarClear = (details: any) => {
-		details?.fileRejectDetails();
-	};
+	// Use an effect to update the avatar preview when the form data changes.
+	$effect(() => {
+		$avatarForm.avatar = data.form.avatarForm.data.avatar;
+	});
 </script>
 
 <svelte:head>
@@ -184,17 +168,20 @@
 						use:avatarEnhance
 					>
 						<input type="hidden" name="id" value={id} />
-						<input type="hidden" name="avatar" bind:value={avatarPreview} />
 						<div class="grid grid-cols-2 gap-4">
 							<div class="flex flex-col items-center justify-center">
-								<img src={avatarPreview} alt="Avatar Preview" class="max-w-full object-cover" />
+								<img
+									src={$avatarForm.avatar}
+									alt="Avatar Preview"
+									class="max-h-32 max-w-full object-cover"
+								/>
+								<p>Placeholder for form buttons (delete ...etc.)</p>
 							</div>
 							<FileUpload
+								name="avatar"
 								maxFiles={1}
 								subtext="Attach your file."
-								onFileChange={avatarSelect}
-								onFileAccept={avatarUpload}
-								onFileReject={avatarClear}
+								onFileChange={avatarUpload}
 							>
 								{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
 								{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
@@ -202,7 +189,7 @@
 							</FileUpload>
 						</div>
 					</form>
-					{#if errorsAvatar && $avatarForm.avatar}
+					{#if errorsAvatar && errorsAvatar.length}
 						<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
 							{#each errorsAvatar as message, i (i)}
 								<p
