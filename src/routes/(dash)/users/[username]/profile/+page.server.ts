@@ -65,37 +65,13 @@ export const load: PageServerLoad = async (event) => {
 
 export const actions: Actions = {
 	avatar: async (event) => {
+		const avatarForm = await superValidate(event.request, valibot(profileAvatarSchema));
+		if (!avatarForm.valid) return fail(400, { avatarForm });
 		const viewer = event.locals.authUser;
 		if (!viewer) throw redirect(302, '/login');
-		const formData = await event.request.formData();
-		const id = formData.get('id');
-		if (typeof id !== 'string' || !id) {
-			return setFlash({ type: 'error', message: 'Missing profile id.' }, event.cookies);
-		}
-		let base64: string | undefined;
-		const avatarField = formData.get('avatar');
-		if (avatarField instanceof File) {
-			if (avatarField.size === 0) {
-				return setFlash({ type: 'info', message: 'No avatar provided.' }, event.cookies);
-			}
-			const buffer = Buffer.from(await avatarField.arrayBuffer());
-			const mime = avatarField.type || 'image/png';
-			base64 = `data:${mime};base64,${buffer.toString('base64')}`;
-		} else if (typeof avatarField === 'string' && avatarField.trim() !== '') {
-			// fallback path if a base64 string is sent instead of a File
-			base64 = avatarField.startsWith('data:image/')
-				? avatarField
-				: `data:image/png;base64,${avatarField}`;
-		}
-		if (!base64) {
-			return setFlash({ type: 'info', message: 'No avatar provided.' }, event.cookies);
-		}
-		const avatarForm = await superValidate({ avatar: base64 }, valibot(profileAvatarSchema));
-		if (!avatarForm.valid) {
-			return setFlash({ type: 'error', message: 'Invalid avatar data.' }, event.cookies);
-		}
+		const { id, avatar } = avatarForm.data;
 		try {
-			await prisma.profile.update({ where: { id }, data: { avatar: base64 } });
+			await prisma.profile.update({ where: { id }, data: { avatar } });
 		} catch (error) {
 			return setFlash(
 				{ type: 'error', message: error instanceof Error ? error.message : String(error) },

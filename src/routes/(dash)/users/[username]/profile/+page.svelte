@@ -105,21 +105,27 @@
 	});
 
 	// FileUpload Component
-	// Submit the form only when a file is selected; do not mutate the bound avatar value here.
-	// This ensures the header image updates only after a successful server response.
 	let avatarFormEl: HTMLFormElement | null = $state(null);
+	let avatarPreview: string | undefined = $state();
 	const avatarUpload = (details: any) => {
 		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
-		if (!(file instanceof File)) {
-			// Likely a removal/clear action — don't submit and don't change preview state.
-			return;
-		}
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			avatarPreview = e.target?.result as string;
+			if (!errorsAvatar) {
+				$avatarForm.avatar = e.target?.result as string;
+			}
+		};
+		reader.readAsDataURL(file);
 		// Defer submit to ensure the underlying input has been updated by FileUpload
 		setTimeout(() => {
 			avatarFormEl?.requestSubmit();
-		}, 0);
+		}, 100);
 	};
 	// Use an effect to update the avatar preview when the form data changes.
+	$effect(() => {
+		avatarPreview = avatarPreview ?? data.form.avatarForm.data.avatar;
+	});
 	$effect(() => {
 		$avatarForm.avatar = data.form.avatarForm.data.avatar;
 	});
@@ -168,28 +174,24 @@
 						use:avatarEnhance
 					>
 						<input type="hidden" name="id" value={id} />
+						<input type="hidden" name="avatar" bind:value={$avatarForm.avatar} />
 						<div class="grid grid-cols-2 gap-4">
 							<div class="flex flex-col items-center justify-center">
 								<img
-									src={$avatarForm.avatar}
+									src={avatarPreview}
 									alt="Avatar Preview"
 									class="max-h-32 max-w-full object-cover"
 								/>
 								<p>Placeholder for form buttons (delete ...etc.)</p>
 							</div>
-							<FileUpload
-								name="avatar"
-								maxFiles={1}
-								subtext="Attach your file."
-								onFileChange={avatarUpload}
-							>
+							<FileUpload maxFiles={1} subtext="Attach your file." onFileChange={avatarUpload}>
 								{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
 								{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
 								{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
 							</FileUpload>
 						</div>
 					</form>
-					{#if errorsAvatar && errorsAvatar.length}
+					{#if avatarPreview && errorsAvatar.length > 0}
 						<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
 							{#each errorsAvatar as message, i (i)}
 								<p
