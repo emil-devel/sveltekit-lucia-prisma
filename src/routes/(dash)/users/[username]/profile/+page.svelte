@@ -37,9 +37,8 @@
 		errors: avatarErrors,
 		form: avatarForm
 	} = superForm(data.form.avatarForm, {
-		validators: valibot(profileAvatarSchema)
-		// Ensure multipart submission so the File is included
-		// dataType: 'form'
+		validators: valibot(profileAvatarSchema),
+		validationMethod: 'onblur'
 	});
 	const {
 		enhance: firstNameEnhance,
@@ -107,19 +106,23 @@
 	// FileUpload Component
 	let avatarFormEl: HTMLFormElement | null = $state(null);
 	let avatarPreview: string | undefined = $state();
-	const avatarUpload = (details: any) => {
+	const avatarSelect = (details: any) => {
+		avatarErrors.set({ avatar: [] });
 		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
+		if (file.size > 350000) {
+			avatarErrors.set({ avatar: ['Avatar image too large (max ~250KB)!'] });
+		}
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			avatarPreview = e.target?.result as string;
-			if (!errorsAvatar) {
-				$avatarForm.avatar = e.target?.result as string;
-			}
 		};
 		reader.readAsDataURL(file);
-		// Defer submit to ensure the underlying input has been updated by FileUpload
+	};
+	const avatarUpload = () => {
 		setTimeout(() => {
-			avatarFormEl?.requestSubmit();
+			if (avatarPreview && errorsAvatar.length === 0) {
+				avatarFormEl?.requestSubmit();
+			}
 		}, 100);
 	};
 	// Use an effect to update the avatar preview when the form data changes.
@@ -174,7 +177,7 @@
 						use:avatarEnhance
 					>
 						<input type="hidden" name="id" value={id} />
-						<input type="hidden" name="avatar" bind:value={$avatarForm.avatar} />
+						<input type="hidden" name="avatar" bind:value={avatarPreview} />
 						<div class="grid grid-cols-2 gap-4">
 							<div class="flex flex-col items-center justify-center">
 								<img
@@ -184,7 +187,12 @@
 								/>
 								<p>Placeholder for form buttons (delete ...etc.)</p>
 							</div>
-							<FileUpload maxFiles={1} subtext="Attach your file." onFileChange={avatarUpload}>
+							<FileUpload
+								maxFiles={1}
+								subtext="Attach your file."
+								onFileChange={avatarSelect}
+								onFileAccept={avatarUpload}
+							>
 								{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
 								{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
 								{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}

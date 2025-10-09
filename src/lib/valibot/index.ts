@@ -104,13 +104,9 @@ export const profileAvatarSchema = object({
 	avatar: optional(
 		pipe(
 			string(),
-			// Rough size cap: ~250 KB base64 (DB bloat awareness); adjust as needed
-			maxLength(350000, 'Avatar image too large (max ~250KB)!'),
-			// Data URL enforced (only common safe raster formats)
-			// Allow either full data URL or bare base64 (we'll normalize server-side)
 			regex(
 				/^(?:data:image\/[png,jpeg,jpg,webp,gif,svg+xml]+;base64,)?[A-Za-z0-9+/=]+$/,
-				'Invalid image data. Expected base64 (PNG, JPEG, JPG, WEBP, GIF or SVG)'
+				'Invalid image data. Expected PNG, JPEG, JPG, WEBP, GIF or SVG format.'
 			)
 		)
 	)
