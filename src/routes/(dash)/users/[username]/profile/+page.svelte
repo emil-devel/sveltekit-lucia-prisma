@@ -88,7 +88,6 @@
 	let body = $state($bioForm.bio ?? '');
 	// Editor instance binding
 	import type { Editor } from '@tiptap/core';
-	import { file } from 'valibot';
 	let editor = $state<Editor | undefined>();
 	// Always up-to-date HTML extracted from the editor
 	const htmlContent = $derived(editor?.getHTML() ?? body);
@@ -107,23 +106,35 @@
 	let avatarFormEl: HTMLFormElement | null = $state(null);
 	let avatarPreview: string | undefined = $state();
 	const avatarUpload = (details: any) => {
+		// Normalize payload to support both CustomEvent and direct object usage
+		const payload = details?.detail ?? details;
 		avatarErrors.set({ avatar: [] });
-		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
-		if (file.size > 350000) {
-			avatarErrors.set({ avatar: ['Avatar image too large (max ~250KB)!'] });
+		const file = payload?.files?.[0] ?? payload?.file ?? payload?.acceptedFiles?.[0];
+		// If no file present, this is likely a remove/clear event from FileUpload
+		if (!file) {
+			avatarPreview = undefined;
+			avatarErrors.set({ avatar: [] });
+			return;
 		}
-		const allowedFormats = ['.png', '.jpeg', '.jpg', '.webp', '.gif', '.svg'];
-		if (!allowedFormats.some((ext) => file.name.toLowerCase().endsWith(ext))) {
-			avatarErrors.set({
-				avatar: ['Invalid file format. Allowed: PNG, JPEG, JPG, WEBP, GIF, SVG']
-			});
-		}
+		// Always build preview first, even if the file turns out invalid
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			avatarPreview = e.target?.result as string;
 		};
 		reader.readAsDataURL(file);
-		//
+		// Validate after kicking off preview build
+		const messages: string[] = [];
+		if (file.size > 350000) messages.push('Avatar image too large (max ~250KB)!');
+		const allowedFormats = ['.png', '.jpeg', '.jpg', '.webp', '.gif', '.svg'];
+		if (!allowedFormats.some((ext) => file.name?.toLowerCase().endsWith(ext))) {
+			messages.push('Invalid file format. Allowed: PNG, JPEG, JPG, WEBP, GIF, SVG');
+		}
+		if (messages.length > 0) {
+			avatarErrors.set({ avatar: messages });
+			// Keep preview visible; do not submit
+			return;
+		}
+		// Submit after preview is set and no validation errors
 		setTimeout(() => {
 			if (avatarPreview && errorsAvatar.length === 0) {
 				avatarFormEl?.requestSubmit();
@@ -131,12 +142,8 @@
 		}, 100);
 	};
 	// Use an effect to update the avatar preview when the form data changes.
-	$effect(() => {
-		avatarPreview = avatarPreview ?? data.form.avatarForm.data.avatar;
-	});
-	$effect(() => {
-		$avatarForm.avatar = data.form.avatarForm.data.avatar;
-	});
+	// Note: Keep avatarPreview undefined unless a new local file is selected.
+	// Superforms will update $avatarForm.avatar from server responses automatically.
 </script>
 
 <svelte:head>
@@ -161,7 +168,9 @@
 			</h1>
 			<div class="mt-6 -mb-16 h-24 w-24 rounded-full border-6 border-secondary-300-700">
 				<Avatar class="h-full w-full bg-surface-100-900">
-					<Avatar.Image src={$avatarForm.avatar} />
+					{#key $avatarForm.avatar}
+						<Avatar.Image src={$avatarForm.avatar} />
+					{/key}
 					<Avatar.Fallback>
 						{$firstNameForm.firstName?.at(0)}{$lastNameForm.lastName?.at(0)}
 					</Avatar.Fallback>
@@ -174,31 +183,61 @@
 					<span>Profile</span>
 				</h2>
 				{#if isSelf}
-					<form
-						bind:this={avatarFormEl}
-						method="post"
-						action="?/avatar"
-						enctype="multipart/form-data"
-						use:avatarEnhance
-					>
-						<input type="hidden" name="id" value={id} />
-						<input type="hidden" name="avatar" bind:value={avatarPreview} />
-						<div class="grid grid-cols-2 gap-4">
-							<div class="flex flex-col items-center justify-center">
-								<img
-									src={avatarPreview}
-									alt="Avatar Preview"
-									class="max-h-32 max-w-full object-cover"
-								/>
-								<p>Placeholder for form buttons (delete ...etc.)</p>
-							</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div class="flex flex-col items-center justify-center">
+							{#if avatarPreview || $avatarForm.avatar}
+								{#key avatarPreview && avatarPreview.length > 0 ? avatarPreview : $avatarForm.avatar}
+									<img
+										src={avatarPreview && avatarPreview.length > 0
+											? avatarPreview
+											: $avatarForm.avatar}
+										alt="Avatar Preview"
+										class="max-h-32 max-w-full object-cover"
+									/>
+								{/key}
+								{#if !avatarPreview && $avatarForm.avatar}
+									<p>Placeholder for form buttons (delete Avatar ...etc.)</p>
+								{/if}
+							{:else}
+								<p>No Avatar.</p>
+							{/if}
+						</div>
+						<form
+							bind:this={avatarFormEl}
+							method="post"
+							action="?/avatar"
+							enctype="multipart/form-data"
+							use:avatarEnhance={{
+								onResult: ({ result }) => {
+									const status = (result as any)?.status ?? 200;
+									const isFailure = (result as any)?.type === 'failure' || status >= 400;
+									if (!isFailure) {
+										const newAvatar: string | undefined = (result as any)?.data?.form?.data?.avatar;
+										// Update both the store and preview so the preview reflects the current uploaded avatar
+										if (newAvatar && typeof newAvatar === 'string' && newAvatar.length > 0) {
+											$avatarForm.avatar = newAvatar;
+											avatarPreview = newAvatar;
+										} else if (avatarPreview) {
+											$avatarForm.avatar = avatarPreview;
+										}
+										// Clear the FileUpload chip by resetting the form after the state updates have propagated
+										setTimeout(() => {
+											avatarFormEl?.reset();
+										}, 0);
+									}
+								}
+							}}
+						>
+							<input type="hidden" name="id" value={id} />
+							<input type="hidden" name="avatar" bind:value={avatarPreview} />
+
 							<FileUpload maxFiles={1} subtext="Attach your file." onFileChange={avatarUpload}>
 								{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
 								{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
 								{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
 							</FileUpload>
-						</div>
-					</form>
+						</form>
+					</div>
 					{#if avatarPreview && errorsAvatar.length > 0}
 						<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
 							{#each errorsAvatar as message, i (i)}
