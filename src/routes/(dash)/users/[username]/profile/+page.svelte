@@ -141,9 +141,6 @@
 			}
 		}, 100);
 	};
-	// Use an effect to update the avatar preview when the form data changes.
-	// Note: Keep avatarPreview undefined unless a new local file is selected.
-	// Superforms will update $avatarForm.avatar from server responses automatically.
 </script>
 
 <svelte:head>
