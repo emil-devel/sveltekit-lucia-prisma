@@ -12,10 +12,7 @@ import {
 	date,
 	optional,
 	enum_,
-	maxLength,
-	file,
-	mimeType,
-	maxSize
+	maxLength
 } from 'valibot';
 // Keep role values in sync with $lib/permissions/ROLES and Prisma enum
 
@@ -101,23 +98,7 @@ export const roleUserSchema = object({ id: string(), role: enum_(ROLE_ENUM) });
 // Per-field schemas for profile page partial updates
 export const profileAvatarSchema = object({
 	id: string(),
-	avatar: optional(
-		pipe(
-			string(),
-			regex(
-				/^(?:data:image\/[png,jpeg,jpg,webp,gif,svg+xml]+;base64,)?[A-Za-z0-9+/=]+$/,
-				'Invalid image data. Expected PNG, JPEG, JPG, WEBP, GIF or SVG format.'
-			)
-		)
-	)
-});
-export const new_profileAvatarSchema = object({
-	id: string(),
-	avatar: pipe(
-		file('Please select an image file.'),
-		mimeType(['image/jpeg', 'image/png'], 'Please select a JPEG or PNG file.'),
-		maxSize(1024 * 1024 * 10, 'Please select a file smaller than 10 MB.')
-	)
+	avatar: string()
 });
 
 export const profileFirstNameSchema = object({

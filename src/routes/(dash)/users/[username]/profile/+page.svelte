@@ -106,19 +106,24 @@
 	// FileUpload Component
 	let avatarFormEl: HTMLFormElement | null = $state(null);
 	let avatarPreview: string | undefined = $state();
-	const avatarSelect = (details: any) => {
+	const avatarUpload = (details: any) => {
 		avatarErrors.set({ avatar: [] });
 		const file = details?.files?.[0] ?? details?.file ?? details?.acceptedFiles?.[0];
 		if (file.size > 350000) {
 			avatarErrors.set({ avatar: ['Avatar image too large (max ~250KB)!'] });
+		}
+		const allowedFormats = ['.png', '.jpeg', '.jpg', '.webp', '.gif', '.svg'];
+		if (!allowedFormats.some((ext) => file.name.toLowerCase().endsWith(ext))) {
+			avatarErrors.set({
+				avatar: ['Invalid file format. Allowed: PNG, JPEG, JPG, WEBP, GIF, SVG']
+			});
 		}
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			avatarPreview = e.target?.result as string;
 		};
 		reader.readAsDataURL(file);
-	};
-	const avatarUpload = () => {
+		//
 		setTimeout(() => {
 			if (avatarPreview && errorsAvatar.length === 0) {
 				avatarFormEl?.requestSubmit();
@@ -187,12 +192,7 @@
 								/>
 								<p>Placeholder for form buttons (delete ...etc.)</p>
 							</div>
-							<FileUpload
-								maxFiles={1}
-								subtext="Attach your file."
-								onFileChange={avatarSelect}
-								onFileAccept={avatarUpload}
-							>
+							<FileUpload maxFiles={1} subtext="Attach your file." onFileChange={avatarUpload}>
 								{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
 								{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
 								{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
