@@ -21,6 +21,7 @@
 		ImagePlus,
 		Paperclip,
 		Phone,
+		Trash,
 		UserRound,
 		UserRoundPen,
 		X
@@ -102,7 +103,8 @@
 		}
 	});
 
-	// FileUpload Component
+	// FileUpload Component (Avatar)
+	let avatarEdit = $state(false);
 	let avatarFormEl: HTMLFormElement | null = $state(null);
 	let avatarPreview: string | undefined = $state();
 	const avatarUpload = (details: any) => {
@@ -180,61 +182,91 @@
 					<span>Profile</span>
 				</h2>
 				{#if isSelf}
-					<div class="grid grid-cols-2 gap-4">
-						<div class="flex flex-col items-center justify-center">
-							{#if avatarPreview || $avatarForm.avatar}
-								{#key avatarPreview && avatarPreview.length > 0 ? avatarPreview : $avatarForm.avatar}
-									<img
-										src={avatarPreview && avatarPreview.length > 0
-											? avatarPreview
-											: $avatarForm.avatar}
-										alt="Avatar Preview"
-										class="max-h-32 max-w-full object-cover"
-									/>
-								{/key}
-								{#if !avatarPreview && $avatarForm.avatar}
-									<p>Placeholder for form buttons (delete Avatar ...etc.)</p>
-								{/if}
-							{:else}
-								<p>No Avatar.</p>
-							{/if}
-						</div>
-						<form
-							bind:this={avatarFormEl}
-							method="post"
-							action="?/avatar"
-							enctype="multipart/form-data"
-							use:avatarEnhance={{
-								onResult: ({ result }) => {
-									const status = (result as any)?.status ?? 200;
-									const isFailure = (result as any)?.type === 'failure' || status >= 400;
-									if (!isFailure) {
-										const newAvatar: string | undefined = (result as any)?.data?.form?.data?.avatar;
-										// Update both the store and preview so the preview reflects the current uploaded avatar
-										if (newAvatar && typeof newAvatar === 'string' && newAvatar.length > 0) {
-											$avatarForm.avatar = newAvatar;
-											avatarPreview = newAvatar;
-										} else if (avatarPreview) {
-											$avatarForm.avatar = avatarPreview;
-										}
-										// Clear the FileUpload chip by resetting the form after the state updates have propagated
-										setTimeout(() => {
-											avatarFormEl?.reset();
-										}, 0);
-									}
-								}
-							}}
+					<div>
+						<button onclick={() => (avatarEdit = !avatarEdit)} class="btn preset-tonal btn-sm"
+							><UserRoundPen size={16} /> Avatar Edit</button
 						>
-							<input type="hidden" name="id" value={id} />
-							<input type="hidden" name="avatar" bind:value={avatarPreview} />
-
-							<FileUpload maxFiles={1} subtext="Attach your file." onFileChange={avatarUpload}>
-								{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
-								{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
-								{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
-							</FileUpload>
-						</form>
 					</div>
+					{#if avatarEdit}
+						<div class="border border-surface-200-800 p-2" transition:slide>
+							<form
+								bind:this={avatarFormEl}
+								method="post"
+								action="?/avatar"
+								enctype="multipart/form-data"
+								use:avatarEnhance={{
+									onResult: ({ result }) => {
+										const status = (result as any)?.status ?? 200;
+										const isFailure = (result as any)?.type === 'failure' || status >= 400;
+										if (!isFailure) {
+											const newAvatar: unknown = (result as any)?.data?.form?.data?.avatar;
+											// Update both the store and preview
+											if (typeof newAvatar === 'string') {
+												if (newAvatar.length > 0) {
+													// Upload path: server returned the new avatar string
+													$avatarForm.avatar = newAvatar;
+													avatarPreview = newAvatar;
+												} else {
+													// Deletion path: explicit empty string means clear
+													$avatarForm.avatar = '' as any;
+													avatarPreview = undefined;
+												}
+											} else {
+												// Server did not echo avatar back.
+												// If we have a local preview, assume upload success and use it;
+												// otherwise assume deletion success and clear immediately.
+												if (avatarPreview && avatarPreview.length > 0) {
+													$avatarForm.avatar = avatarPreview;
+												} else {
+													$avatarForm.avatar = '' as any;
+													avatarPreview = undefined;
+												}
+											}
+											// Clear the FileUpload chip by resetting the form after the state updates have propagated
+											setTimeout(() => {
+												avatarFormEl?.reset();
+											}, 0);
+										}
+									}
+								}}
+							>
+								<input type="hidden" name="id" value={id} />
+								<input type="hidden" name="avatar" bind:value={avatarPreview} />
+								<div class="grid grid-cols-2 gap-4">
+									<div class="flex flex-col items-center justify-center">
+										{#if avatarPreview || $avatarForm.avatar}
+											{#key avatarPreview && avatarPreview.length > 0 ? avatarPreview : $avatarForm.avatar}
+												<img
+													src={avatarPreview && avatarPreview.length > 0
+														? avatarPreview
+														: $avatarForm.avatar}
+													alt="Avatar Preview"
+													class="max-h-32 max-w-full object-cover"
+												/>
+											{/key}
+											{#if !avatarPreview && $avatarForm.avatar}
+												<button
+													class="mt-2 btn preset-filled-error-300-700 btn-sm"
+													type="submit"
+													onclick={(e) => !confirm('Are you sure?') && e.preventDefault()}
+												>
+													<Trash class="size-4" />
+													<span>Remove Avatar</span>
+												</button>
+											{/if}
+										{:else}
+											<p>No Avatar.</p>
+										{/if}
+									</div>
+									<FileUpload maxFiles={1} subtext="Attach your file." onFileChange={avatarUpload}>
+										{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
+										{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
+										{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
+									</FileUpload>
+								</div>
+							</form>
+						</div>
+					{/if}
 					{#if avatarPreview && errorsAvatar.length > 0}
 						<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
 							{#each errorsAvatar as message, i (i)}
@@ -370,7 +402,7 @@
 				<div class="py-4">
 					{#if isSelf}
 						<form
-							class="flex items-baseline justify-between gap-4"
+							class="flex items-baseline justify-between gap-4 pb-1"
 							method="post"
 							action="?/bio"
 							use:bioEnhance

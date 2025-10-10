@@ -69,7 +69,8 @@ export const actions: Actions = {
 		if (!avatarForm.valid) return fail(400, { avatarForm });
 		const viewer = event.locals.authUser;
 		if (!viewer) throw redirect(302, '/login');
-		const { id, avatar } = avatarForm.data;
+		const { id } = avatarForm.data;
+		const avatar = avatarForm.data.avatar === '' ? null : avatarForm.data.avatar;
 		try {
 			await prisma.profile.update({ where: { id }, data: { avatar } });
 		} catch (error) {
@@ -78,7 +79,13 @@ export const actions: Actions = {
 				event.cookies
 			);
 		}
-		setFlash({ type: 'success', message: 'Avatar updated.' }, event.cookies);
+		setFlash(
+			{
+				type: 'success',
+				message: `Avatar ${avatarForm.data.avatar === '' ? 'deleted' : 'updated'}.`
+			},
+			event.cookies
+		);
 	},
 	firstName: async (event) => {
 		const firstNameForm = await superValidate(event.request, valibot(profileFirstNameSchema));
