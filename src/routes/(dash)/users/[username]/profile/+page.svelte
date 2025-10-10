@@ -31,13 +31,13 @@
 	let { data }: PageProps = $props();
 
 	// Destructure basic fields
-	const { id, name, userId } = data.form;
+	const { id, name, userId } = data;
 	// Forms
 	const {
 		enhance: avatarEnhance,
 		errors: avatarErrors,
 		form: avatarForm
-	} = superForm(data.form.avatarForm, {
+	} = superForm(data.avatarForm, {
 		validators: valibot(profileAvatarSchema),
 		validationMethod: 'onblur'
 	});
@@ -45,18 +45,18 @@
 		enhance: firstNameEnhance,
 		form: firstNameForm,
 		errors: firstNameErrors
-	} = superForm(data.form.firstNameForm, { validators: valibot(profileFirstNameSchema) });
+	} = superForm(data.firstNameForm, { validators: valibot(profileFirstNameSchema) });
 	const {
 		enhance: lastNameEnhance,
 		form: lastNameForm,
 		errors: lastNameErrors
-	} = superForm(data.form.lastNameForm, { validators: valibot(profileLastNameSchema) });
+	} = superForm(data.lastNameForm, { validators: valibot(profileLastNameSchema) });
 	const {
 		enhance: phoneEnhance,
 		form: phoneForm,
 		errors: phoneErrors
-	} = superForm(data.form.phoneForm, { validators: valibot(profilePhoneSchema) });
-	const { enhance: bioEnhance, form: bioForm } = superForm(data.form.bioForm, {
+	} = superForm(data.phoneForm, { validators: valibot(profilePhoneSchema) });
+	const { enhance: bioEnhance, form: bioForm } = superForm(data.bioForm, {
 		validators: valibot(profileBioSchema),
 		dataType: 'json'
 	});

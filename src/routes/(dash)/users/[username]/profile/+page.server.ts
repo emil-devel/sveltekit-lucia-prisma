@@ -12,45 +12,52 @@ import {
 	profileBioSchema
 } from '$lib/valibot';
 
-export const load: PageServerLoad = async (event) => {
+export const load: PageServerLoad = (async (event) => {
 	if (!event.locals.authUser) throw redirect(302, '/login');
-	const username = event.params.username;
-	const row = await prisma.profile.findUnique({
-		where: { name: username },
-		select: {
-			id: true,
-			name: true,
-			userId: true,
-			avatar: true,
-			firstName: true,
-			lastName: true,
-			phone: true,
-			bio: true
-		}
-	});
-	if (!row) throw redirect(302, '/users');
-	const viewer = event.locals.authUser;
-	if (!viewer || !(isAdmin(viewer) || isSelf(viewer.id, row.userId))) throw redirect(302, '/users');
-	const profile = {
-		...row,
-		avatar: row.avatar ?? '',
-		firstName: row.firstName ?? '',
-		lastName: row.lastName ?? '',
-		phone: row.phone ?? '',
-		bio: row.bio ?? ''
-	};
-	const [avatarForm, firstNameForm, lastNameForm, phoneForm, bioForm] = await Promise.all([
-		superValidate({ id: profile.id, avatar: profile.avatar }, valibot(profileAvatarSchema)),
-		superValidate(
-			{ id: profile.id, firstName: profile.firstName },
-			valibot(profileFirstNameSchema)
-		),
-		superValidate({ id: profile.id, lastName: profile.lastName }, valibot(profileLastNameSchema)),
-		superValidate({ id: profile.id, phone: profile.phone }, valibot(profilePhoneSchema)),
-		superValidate({ id: profile.id, bio: profile.bio }, valibot(profileBioSchema))
-	]);
-	return {
-		form: {
+	const getProfile = async (name: string) => {
+		const profile = await prisma.profile.findUnique({
+			where: { name },
+			select: {
+				id: true,
+				name: true,
+				userId: true,
+				avatar: true,
+				firstName: true,
+				lastName: true,
+				phone: true,
+				bio: true
+			}
+		});
+		if (!profile) throw redirect(302, '/users');
+		// View policy: Users may view only their own profile; Admins may view any profile
+		const viewer = event.locals.authUser;
+		if (!viewer || !(isAdmin(viewer) || isSelf(viewer.id, profile.userId)))
+			throw redirect(302, '/users');
+		// Create forms
+		const [avatarForm, firstNameForm, lastNameForm, phoneForm, bioForm] = await Promise.all([
+			superValidate(
+				{ id: profile.id, avatar: profile.avatar as string | undefined },
+				valibot(profileAvatarSchema)
+			),
+			superValidate(
+				{ id: profile.id, firstName: profile.firstName as string | undefined },
+				valibot(profileFirstNameSchema)
+			),
+			superValidate(
+				{ id: profile.id, lastName: profile.lastName as string | undefined },
+				valibot(profileLastNameSchema)
+			),
+			superValidate(
+				{ id: profile.id, phone: profile.phone as string | undefined },
+				valibot(profilePhoneSchema)
+			),
+			superValidate(
+				{ id: profile.id, bio: profile.bio as string | undefined },
+				valibot(profileBioSchema)
+			)
+		]);
+
+		return {
 			id: profile.id,
 			name: profile.name,
 			userId: profile.userId,
@@ -59,9 +66,11 @@ export const load: PageServerLoad = async (event) => {
 			lastNameForm,
 			phoneForm,
 			bioForm
-		}
+		};
 	};
-};
+
+	return await getProfile(event.params.username);
+}) satisfies PageServerLoad;
 
 export const actions: Actions = {
 	avatar: async (event) => {

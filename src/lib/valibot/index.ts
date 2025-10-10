@@ -177,14 +177,3 @@ export const profilePhoneSchema = object({
 	)
 });
 export const profileBioSchema = object({ id: string(), bio: optional(string()) });
-
-export const profileSchema = object({
-	id: string(),
-	name: string(),
-	userId: string(),
-	avatar: optional(string()),
-	firstName: optional(string()),
-	lastName: optional(string()),
-	phone: optional(string()),
-	bio: optional(string())
-});
