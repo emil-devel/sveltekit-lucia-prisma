@@ -15,7 +15,7 @@ import {
 export const load = (async (event) => {
 	if (!event.locals.authUser) throw redirect(302, '/login');
 
-	const getUserForms = async (username: string) => {
+	const getUser = async (username: string) => {
 		const user = await prisma.user.findUnique({
 			where: { username },
 			select: {
@@ -59,7 +59,7 @@ export const load = (async (event) => {
 		};
 	};
 
-	return { form: await getUserForms(event.params.username) };
+	return await getUser(event.params.username);
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {

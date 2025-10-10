@@ -24,13 +24,13 @@
 
 	let { data }: PageProps = $props();
 
-	const { id, createdAt, firstName, lastName, updatedAt } = data.form;
+	const { id, createdAt, firstName, lastName, updatedAt } = data;
 
 	const {
 		enhance: usernameEnhance,
 		errors: usernameErrors,
 		form: usernameForm
-	} = superForm(data.form.usernameForm, {
+	} = superForm(data.usernameForm, {
 		validators: valibot(userNameSchema),
 		validationMethod: 'oninput'
 	});
@@ -38,13 +38,13 @@
 		enhance: emailEnhance,
 		errors: emailErrors,
 		form: emailForm
-	} = superForm(data.form.emailForm, {
+	} = superForm(data.emailForm, {
 		validators: valibot(userEmailSchema),
 		validationMethod: 'oninput'
 	});
-	const { enhance: activeEnhance, form: activeForm } = superForm(data.form.activeForm);
-	const { enhance: roleEnhance, form: roleForm } = superForm(data.form.roleForm);
-	const { enhance: deleteEnhance } = superForm(data.form.deleteForm);
+	const { enhance: activeEnhance, form: activeForm } = superForm(data.activeForm);
+	const { enhance: roleEnhance, form: roleForm } = superForm(data.roleForm);
+	const { enhance: deleteEnhance } = superForm(data.deleteForm);
 
 	const errorsUsername = $derived(($usernameErrors.username ?? []) as string[]);
 	const errorsEmail = $derived(($emailErrors.email ?? []) as string[]);
@@ -92,7 +92,7 @@
 				class:border-error-300-700={$roleForm.role === 'ADMIN'}
 			>
 				<Avatar class="h-full w-full bg-surface-100-900">
-					<Avatar.Image src={data.form.avatar} />
+					<Avatar.Image src={data.avatar} />
 					<Avatar.Fallback>
 						{firstName?.at(0)}{lastName?.at(0)}
 					</Avatar.Fallback>
