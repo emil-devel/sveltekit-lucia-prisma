@@ -4,7 +4,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
 	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
-	import { slide } from 'svelte/transition';
+	import { scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { isSelf as isSelfUtil } from '$lib/permissions';
 	import { valibot } from 'sveltekit-superforms/adapters';
@@ -105,6 +105,7 @@
 
 	// FileUpload Component (Avatar)
 	let avatarEdit = $state(false);
+	let avatarDelete = $state(false);
 	let avatarFormEl: HTMLFormElement | null = $state(null);
 	let avatarPreview: string | undefined = $state();
 	const avatarUpload = (details: any) => {
@@ -233,7 +234,7 @@
 								<input type="hidden" name="id" value={id} />
 								<input type="hidden" name="avatar" bind:value={avatarPreview} />
 								<div class="grid grid-cols-2 gap-4">
-									<div class="flex flex-col items-center justify-center">
+									<div class="relative flex justify-center">
 										{#if avatarPreview || $avatarForm.avatar}
 											{#key avatarPreview && avatarPreview.length > 0 ? avatarPreview : $avatarForm.avatar}
 												<img
@@ -241,28 +242,64 @@
 														? avatarPreview
 														: $avatarForm.avatar}
 													alt="Avatar Preview"
-													class="max-h-32 max-w-full object-cover"
+													class="w-full object-cover"
 												/>
 											{/key}
 											{#if !avatarPreview && $avatarForm.avatar}
-												<button
-													class="mt-2 btn preset-filled-error-300-700 btn-sm"
-													type="submit"
-													onclick={(e) => !confirm('Are you sure?') && e.preventDefault()}
-												>
-													<Trash class="size-4" />
-													<span>Remove Avatar</span>
-												</button>
+												{#if avatarDelete}
+													<div class="absolute top-1 left-0 w-full" transition:scale>
+														<p class="text-center">Really delete?</p>
+														<div class="flex justify-center gap-2">
+															<button
+																class="mt-2 btn preset-filled-error-300-700 btn-sm"
+																type="submit"
+																onclick={() => (avatarDelete = false)}
+															>
+																<Trash size={16} />
+																<span>Yes, Remove</span>
+															</button>
+															<button
+																class="mt-2 btn preset-filled-surface-300-700 btn-sm"
+																type="button"
+																onclick={() => (avatarDelete = false)}
+															>
+																<X size={16} />
+																<span>Cancel</span>
+															</button>
+														</div>
+													</div>
+												{:else}
+													<button
+														class="absolute top-1.5 right-2.5 mt-2 btn-icon btn rounded-full preset-filled-error-300-700 p-1.5"
+														type="submit"
+														onclick={(e) => {
+															e.preventDefault();
+															avatarDelete = true;
+														}}
+														aria-label="Delete Avatar"
+														transition:scale
+													>
+														<Trash />
+													</button>
+												{/if}
 											{/if}
 										{:else}
-											<p>No Avatar.</p>
+											<div class="flex flex-col items-center justify-center">
+												<p>No Avatar.</p>
+											</div>
 										{/if}
 									</div>
-									<FileUpload maxFiles={1} subtext="Attach your file." onFileChange={avatarUpload}>
-										{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
-										{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
-										{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
-									</FileUpload>
+									<div class="flex items-center justify-center">
+										<FileUpload
+											maxFiles={1}
+											subtext="Attach your file."
+											onFileChange={avatarUpload}
+										>
+											{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
+											{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
+											{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
+										</FileUpload>
+									</div>
 								</div>
 							</form>
 						</div>
