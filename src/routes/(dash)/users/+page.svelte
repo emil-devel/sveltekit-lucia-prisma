@@ -2,11 +2,16 @@
 	import type { PageProps } from './$types';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
-	import { Check, Funnel, FunnelX, Search, SearchX, UsersRound, X } from '@lucide/svelte';
+	import { Check, Funnel, Search, SearchX, UsersRound, X } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
 	const users = $derived(data.users);
-	const countUser: number = $derived(users.length);
+
+	let selectedRole = $state<string>('ALL');
+	const filteredUsers = $derived(
+		selectedRole === 'ALL' ? users : users.filter((user) => user.role === selectedRole)
+	);
+	const countUser: number = $derived(filteredUsers.length);
 </script>
 
 <svelte:head>
@@ -19,13 +24,22 @@
 			<UsersRound />
 			<span>Users</span>
 		</h2>
-		<label class="label flex items-center gap-1">
-			<input class="input w-fit" type="search" name="search" />
-			<Search size="20" />
-			<SearchX size="20" />
-			<Funnel size="20" />
-			<FunnelX size="20" />
-		</label>
+		<div class="flex items-center gap-4">
+			<label class="label flex items-center gap-2">
+				<Funnel size="20" />
+				<select class="input w-fit" bind:value={selectedRole}>
+					<option value="ALL">All Roles</option>
+					<option value="USER">User</option>
+					<option value="REDACTEUR">Redacteur</option>
+					<option value="ADMIN">Admin</option>
+				</select>
+			</label>
+			<label class="label flex items-center gap-1">
+				<input class="input w-fit" type="search" name="search" />
+				<Search size="20" />
+				<SearchX size="20" />
+			</label>
+		</div>
 	</header>
 
 	<dl>
@@ -36,7 +50,7 @@
 			<span class="text-center">active</span>
 			<span class="text-right">registred</span>
 		</dt>
-		{#each users as user (user.id)}
+		{#each filteredUsers as user (user.id)}
 			<dd class="my-2 card preset-filled-surface-100-900 card-hover">
 				<a
 					class="grid grid-cols-5 items-center gap-2 border-r-[.25em] border-l-[.25em] border-surface-100-900 p-2 hover:border-primary-300-700"
