@@ -2,11 +2,28 @@
 	import type { PageProps } from './$types';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
-	import { Check, Funnel, FunnelX, Search, SearchX, UsersRound, X } from '@lucide/svelte';
+	import { Check, UsersRound, X } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
-	const users = $derived(data.users);
+	let { users } = $state(data);
 	const countUser: number = $derived(users.length);
+
+	let role: string = $state('');
+	const selectRole = (event: Event) => {
+		const selectEl = event.target as HTMLSelectElement;
+		const selectedRole = selectEl.value;
+		role = selectedRole;
+	};
+
+	$effect(() => {
+		if (role) {
+			users = users.filter((user) => user.role === role);
+		} else {
+			users = data.users;
+		}
+	});
+
+	$inspect(role);
 </script>
 
 <svelte:head>
@@ -19,13 +36,21 @@
 			<UsersRound />
 			<span>Users</span>
 		</h2>
-		<label class="label flex items-center gap-1">
-			<input class="input w-fit" type="search" name="search" />
-			<Search size="20" />
-			<SearchX size="20" />
-			<Funnel size="20" />
-			<FunnelX size="20" />
-		</label>
+		<div class="flex flex-auto items-center gap-4">
+			<div>
+				<label class="label">
+					<select class="select" onchange={() => selectRole}>
+						<option value="" selected>All roles</option>
+						<option value="USER">User</option>
+						<option value="REDACTEUR">Redacteur</option>
+						<option value="ADMIN">Admin</option>
+					</select>
+				</label>
+			</div>
+			<div>
+				<label class="label"><input type="search" class="input w-fit" /></label>
+			</div>
+		</div>
 	</header>
 
 	<dl>
