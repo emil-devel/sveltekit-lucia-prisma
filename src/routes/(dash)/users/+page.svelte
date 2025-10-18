@@ -5,14 +5,13 @@
 	import { Check, UsersRound, X } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
+	let { users } = data;
 
 	let role: string = $state('');
 	let search: string = $state('');
 
-	// derived filteredUsers from original data.users using $derived so it
-	// automatically updates when `data.users`, `role` or `search` change.
 	const filteredUsers = $derived(
-		data.users.filter((user) => {
+		users.filter((user) => {
 			if (role && role !== '' && user.role !== role) return false;
 			const term = search?.trim().toLowerCase();
 			if (!term) return true;
@@ -21,8 +20,6 @@
 		})
 	);
 	const countUser: number = $derived(filteredUsers.length);
-
-	$inspect(role);
 </script>
 
 <svelte:head>
