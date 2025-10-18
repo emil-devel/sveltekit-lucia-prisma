@@ -5,23 +5,22 @@
 	import { Check, UsersRound, X } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
-	let { users } = $state(data);
-	const countUser: number = $derived(users.length);
 
 	let role: string = $state('');
-	const selectRole = (event: Event) => {
-		const selectEl = event.target as HTMLSelectElement;
-		const selectedRole = selectEl.value;
-		role = selectedRole;
-	};
+	let search: string = $state('');
 
-	$effect(() => {
-		if (role) {
-			users = users.filter((user) => user.role === role);
-		} else {
-			users = data.users;
-		}
-	});
+	// derived filteredUsers from original data.users using $derived so it
+	// automatically updates when `data.users`, `role` or `search` change.
+	const filteredUsers = $derived(
+		data.users.filter((user) => {
+			if (role && role !== '' && user.role !== role) return false;
+			const term = search?.trim().toLowerCase();
+			if (!term) return true;
+			const username = (user.username || '').toLowerCase();
+			return username.includes(term);
+		})
+	);
+	const countUser: number = $derived(filteredUsers.length);
 
 	$inspect(role);
 </script>
@@ -39,7 +38,7 @@
 		<div class="flex flex-auto items-center gap-4">
 			<div>
 				<label class="label">
-					<select class="select" onchange={() => selectRole}>
+					<select class="select" bind:value={role}>
 						<option value="" selected>All roles</option>
 						<option value="USER">User</option>
 						<option value="REDACTEUR">Redacteur</option>
@@ -48,7 +47,14 @@
 				</label>
 			</div>
 			<div>
-				<label class="label"><input type="search" class="input w-fit" /></label>
+				<label class="label"
+					><input
+						type="search"
+						class="input w-fit"
+						bind:value={search}
+						placeholder="Search users"
+					/></label
+				>
 			</div>
 		</div>
 	</header>
@@ -61,7 +67,7 @@
 			<span class="text-center">active</span>
 			<span class="text-right">registred</span>
 		</dt>
-		{#each users as user (user.id)}
+		{#each filteredUsers as user (user.id)}
 			<dd class="my-2 card preset-filled-surface-100-900 card-hover">
 				<a
 					class="grid grid-cols-5 items-center gap-2 border-r-[.25em] border-l-[.25em] border-surface-100-900 p-2 hover:border-primary-300-700"
