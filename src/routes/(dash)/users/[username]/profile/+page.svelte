@@ -2,8 +2,7 @@
 	import type { PageProps } from './$types';
 	import { page } from '$app/state';
 	import { superForm } from 'sveltekit-superforms';
-	import { Avatar } from '@skeletonlabs/skeleton-svelte/composed';
-	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
+	import { Avatar, FileUpload } from '@skeletonlabs/skeleton-svelte';
 	import { scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { isSelf as isSelfUtil } from '$lib/permissions';
@@ -17,9 +16,7 @@
 	} from '$lib/valibot';
 	import {
 		ArrowBigLeft,
-		CircleX,
 		ImagePlus,
-		Paperclip,
 		Phone,
 		Trash,
 		UserRound,
@@ -87,11 +84,10 @@
 
 	// Initial HTML content from server form
 	let body = $state($bioForm.bio ?? '');
-	// Editor instance binding
-	import type { Editor } from '@tiptap/core';
-	let editor = $state<Editor | undefined>();
+	// Editor instance binding (use a permissive type to avoid tiptap version type mismatches)
+	let editor = $state<any>();
 	// Always up-to-date HTML extracted from the editor
-	const htmlContent = $derived(editor?.getHTML() ?? body);
+	const htmlContent = $derived.by(() => editor?.getHTML() ?? body);
 
 	// Keep superform field in sync so JSON submission includes latest HTML
 	$effect(() => {
@@ -148,7 +144,7 @@
 
 <svelte:head>
 	<title>Users Profile: {name}</title>
-	<meta name="description" content="Seiten Beschreibung" />
+	<meta name="description" content="Page Description" />
 </svelte:head>
 
 <section class="m-auto max-w-xl space-y-4">
@@ -234,7 +230,7 @@
 								<input type="hidden" name="id" value={id} />
 								<input type="hidden" name="avatar" bind:value={avatarPreview} />
 								<div class="grid grid-cols-2 gap-4">
-									<div class="relative flex justify-center">
+									<div class="relative flex items-center justify-center">
 										{#if avatarPreview || $avatarForm.avatar}
 											{#key avatarPreview && avatarPreview.length > 0 ? avatarPreview : $avatarForm.avatar}
 												<img
@@ -242,7 +238,7 @@
 														? avatarPreview
 														: $avatarForm.avatar}
 													alt="Avatar Preview"
-													class="w-full object-cover"
+													class="max-w-full object-cover"
 												/>
 											{/key}
 											{#if !avatarPreview && $avatarForm.avatar}
@@ -284,20 +280,30 @@
 												{/if}
 											{/if}
 										{:else}
-											<div class="flex flex-col items-center justify-center">
-												<p>No Avatar.</p>
-											</div>
+											<p>No Avatar.</p>
 										{/if}
 									</div>
 									<div class="flex items-center justify-center">
-										<FileUpload
-											maxFiles={1}
-											subtext="Attach your file."
-											onFileChange={avatarUpload}
-										>
-											{#snippet iconInterface()}<ImagePlus class="size-8" />{/snippet}
-											{#snippet iconFile()}<Paperclip class="size-4" />{/snippet}
-											{#snippet iconFileRemove()}<CircleX class="size-4" />{/snippet}
+										<FileUpload maxFiles={1} onFileChange={avatarUpload}>
+											<FileUpload.Dropzone>
+												<ImagePlus class="size-8" />
+												<span>Select file or drag here.</span>
+												<FileUpload.Trigger>Browse Files</FileUpload.Trigger>
+												<FileUpload.HiddenInput />
+											</FileUpload.Dropzone>
+											<FileUpload.ItemGroup>
+												<FileUpload.Context>
+													{#snippet children(fileUpload)}
+														{#each fileUpload().acceptedFiles as file (file.name)}
+															<FileUpload.Item {file}>
+																<FileUpload.ItemName>{file.name}</FileUpload.ItemName>
+																<FileUpload.ItemSizeText>{file.size} bytes</FileUpload.ItemSizeText>
+																<FileUpload.ItemDeleteTrigger />
+															</FileUpload.Item>
+														{/each}
+													{/snippet}
+												</FileUpload.Context>
+											</FileUpload.ItemGroup>
 										</FileUpload>
 									</div>
 								</div>
