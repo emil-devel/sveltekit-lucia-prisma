@@ -6,10 +6,8 @@ node_modules
 .netlify
 .wrangler
 /.svelte-kit
-/.vscode
 /build
 /src/lib/server/generated
-/mcp-llms
 
 # OS
 .DS_Store
