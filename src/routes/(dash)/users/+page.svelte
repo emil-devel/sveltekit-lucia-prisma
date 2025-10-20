@@ -41,7 +41,11 @@
 		<div class="flex flex-auto items-center gap-4">
 			<div>
 				<label class="label">
-					<select class="select text-sm" bind:value={role} onchange={() => (page = 1)}>
+					<select
+						class="select text-sm"
+						bind:value={role}
+						onchange={() => ((page = 1), (search = ''))}
+					>
 						<option value="" selected>All roles</option>
 						<option value="USER">User</option>
 						<option value="REDACTEUR">Redacteur</option>
