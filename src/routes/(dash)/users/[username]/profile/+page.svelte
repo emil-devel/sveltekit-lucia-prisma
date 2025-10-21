@@ -284,11 +284,11 @@
 										{/if}
 									</div>
 									<div class="flex items-center justify-center">
-										<FileUpload maxFiles={1} onFileChange={avatarUpload}>
+										<FileUpload onFileChange={avatarUpload}>
 											<FileUpload.Dropzone>
 												<ImagePlus class="size-8" />
 												<span>Select file or drag here.</span>
-												<FileUpload.Trigger>Browse Files</FileUpload.Trigger>
+												<FileUpload.Trigger class="skb:btn-sm">Browse Files</FileUpload.Trigger>
 												<FileUpload.HiddenInput />
 											</FileUpload.Dropzone>
 											<FileUpload.ItemGroup>
