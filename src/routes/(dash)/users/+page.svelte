@@ -123,33 +123,35 @@
 				<span class="code">{countUser}</span> User{countUser === 1 ? '' : 's'}
 			</p>
 			{#if countUser > 5}
-				<Pagination
-					class="flex-auto"
-					count={filteredUsers.length}
-					pageSize={PAGE_SIZE}
-					{page}
-					onPageChange={(event) => (page = event.page)}
-				>
-					<Pagination.PrevTrigger>
-						<ArrowLeft class="size-4" />
-					</Pagination.PrevTrigger>
-					<Pagination.Context>
-						{#snippet children(pagination: any)}
-							{#each pagination().pages as page, index (page)}
-								{#if page.type === 'page'}
-									<Pagination.Item {...page}>
-										{page.value}
-									</Pagination.Item>
-								{:else}
-									<Pagination.Ellipsis {index}>&#8230;</Pagination.Ellipsis>
-								{/if}
-							{/each}
-						{/snippet}
-					</Pagination.Context>
-					<Pagination.NextTrigger>
-						<ArrowRight class="size-4" />
-					</Pagination.NextTrigger>
-				</Pagination>
+				<div class="flex-auto">
+					<Pagination
+						class="flex-auto"
+						count={filteredUsers.length}
+						pageSize={PAGE_SIZE}
+						{page}
+						onPageChange={(event) => (page = event.page)}
+					>
+						<Pagination.PrevTrigger>
+							<ArrowLeft class="size-4" />
+						</Pagination.PrevTrigger>
+						<Pagination.Context>
+							{#snippet children(pagination: any)}
+								{#each pagination().pages as page, index (page)}
+									{#if page.type === 'page'}
+										<Pagination.Item {...page}>
+											{page.value}
+										</Pagination.Item>
+									{:else}
+										<Pagination.Ellipsis {index}>&#8230;</Pagination.Ellipsis>
+									{/if}
+								{/each}
+							{/snippet}
+						</Pagination.Context>
+						<Pagination.NextTrigger>
+							<ArrowRight class="size-4" />
+						</Pagination.NextTrigger>
+					</Pagination>
+				</div>
 			{/if}
 		</div>
 	{:else}
