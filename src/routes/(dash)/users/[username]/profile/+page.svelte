@@ -149,7 +149,7 @@
 
 <section class="m-auto max-w-xl space-y-4">
 	<div
-		class="divide-y divide-surface-200-800 card border-[1px] border-surface-200-800 preset-filled-surface-100-900"
+		class="divide-y divide-surface-200-800 card border border-surface-200-800 preset-filled-surface-100-900"
 	>
 		<header
 			class="flex flex-row-reverse items-center justify-between gap-4 preset-filled-secondary-300-700 p-4"
@@ -477,9 +477,7 @@
 			<small class="opacity-60">Footer</small>
 		</footer>
 	</div>
-	<div
-		class="mt-8 flex items-center justify-between gap-4 border-t-[1px] border-surface-200-800 p-2"
-	>
+	<div class="mt-8 flex items-center justify-between gap-4 border-t border-surface-200-800 p-2">
 		<a class="btn preset-tonal btn-sm" href="/users/{name}">
 			<ArrowBigLeft size={iconSize} />
 			{name}
