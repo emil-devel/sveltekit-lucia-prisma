@@ -17,17 +17,19 @@
 	// Destructure basic fields
 	const { id, name, userId } = data;
 	// Forms
-	const { form: avatarForm } = superForm(data.avatarForm);
-	const { form: firstNameForm } = superForm(data.firstNameForm);
-	const { form: lastNameForm } = superForm(data.lastNameForm);
+	const { form: avatarForm } = superForm(data.avatarForm, { warnings: { duplicateId: false } });
+	const { form: firstNameForm } = superForm(data.firstNameForm, {
+		warnings: { duplicateId: false }
+	});
+	const { form: lastNameForm } = superForm(data.lastNameForm, { warnings: { duplicateId: false } });
 
-	// Use helper-based permission check like on the username page
+	// Use helper-based permission check
 	const isSelf = $derived(isSelfUtil(page.data.authUser.id, userId));
 </script>
 
 <svelte:head>
-	<title>Users Profile: {name}</title>
-	<meta name="description" content="Page Description" />
+	<title>User Profile: {name}</title>
+	<meta name="description" content="User Profile: First Name, Last Name, Phone, Bio." />
 </svelte:head>
 
 <section class="m-auto max-w-xl space-y-4">
@@ -62,8 +64,10 @@
 					<span>Profile</span>
 				</h2>
 				<AvatarUpload {id} {data} {isSelf} {iconSize} />
-				<FirstName {id} {data} {isSelf} {iconSize} />
-				<LastName {id} {data} {isSelf} {iconSize} />
+				<div class="flex gap-2">
+					<FirstName {id} {data} {isSelf} {iconSize} />
+					<LastName {id} {data} {isSelf} {iconSize} />
+				</div>
 				<Phone {id} {data} {isSelf} {iconSize} />
 				<div class="py-4">
 					<Bio {id} {data} {isSelf} />

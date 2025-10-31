@@ -65,7 +65,7 @@
 
 <section class="m-auto max-w-sm space-y-4">
 	<div
-		class="block max-w-md divide-y divide-surface-200-800 card border-[1px] border-surface-200-800 preset-filled-surface-100-900"
+		class="block max-w-md divide-y divide-surface-200-800 card border border-surface-200-800 preset-filled-surface-100-900"
 	>
 		<header
 			class="flex flex-row-reverse items-center justify-between gap-4 p-4"
@@ -211,7 +211,7 @@
 				{/if}
 			</div>
 			{#if canAdminManage}
-				<div class="mt-8 h-16 overflow-y-hidden border-t-[1px] border-surface-200-800 py-8">
+				<div class="mt-8 h-16 overflow-y-hidden border-t border-surface-200-800 py-8">
 					{#if deleteConfirm}
 						<div
 							class="flex items-center justify-center gap-2"
@@ -258,9 +258,7 @@
 			{/if}
 		</footer>
 	</div>
-	<div
-		class="mt-8 flex items-center justify-between gap-4 border-t-[1px] border-surface-200-800 p-2"
-	>
+	<div class="mt-8 flex items-center justify-between gap-4 border-t border-surface-200-800 p-2">
 		<a class="btn preset-tonal btn-sm" href="/users">
 			<ArrowBigLeft size={iconSize} />
 			Users

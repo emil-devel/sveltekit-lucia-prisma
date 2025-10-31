@@ -15,14 +15,17 @@
 	} = superForm(data.firstNameForm, { validators: valibot(profileFirstNameSchema) });
 
 	const errorsFirstName = $derived(($firstNameErrors.firstName ?? []) as string[]);
+
+	let firstNameEdit = $state(false);
+	let firstNameFormEl: HTMLFormElement | null = $state(null);
 </script>
 
 {#if isSelf}
-	<form method="post" action="?/firstName" use:firstNameEnhance>
+	<form bind:this={firstNameFormEl} method="post" action="?/firstName" use:firstNameEnhance>
 		<input class="input" type="hidden" name="id" value={id} />
 		<label class="label label-text" for="firstName">First Name</label>
 		<div class="input-group grid-cols-[auto_1fr_auto]">
-			<div class="ig-cell preset-tonal py-1.5">
+			<div class="ig-cell preset-tonal py-1.5 {firstNameEdit ? 'text-warning-500' : ''}">
 				<UserRound size={iconSize} />
 			</div>
 			<input
@@ -30,9 +33,15 @@
 				type="text"
 				name="firstName"
 				bind:value={$firstNameForm.firstName}
+				onkeyup={() => (firstNameEdit = true)}
+				onfocusout={() => {
+					if (firstNameEdit && firstNameFormEl) {
+						firstNameFormEl.requestSubmit();
+						firstNameEdit = false;
+					}
+				}}
 				spellcheck="false"
 			/>
-			<button class="ig-btn preset-tonal btn-sm" type="submit"> Submit </button>
 		</div>
 	</form>
 	{#if errorsFirstName && $firstNameForm.firstName}

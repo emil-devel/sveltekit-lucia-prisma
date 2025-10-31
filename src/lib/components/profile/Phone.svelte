@@ -28,14 +28,17 @@
 		}
 		return val;
 	});
+
+	let phoneEdit = $state(false);
+	let phoneFormEl: HTMLFormElement | null = $state(null);
 </script>
 
 {#if isSelf}
-	<form method="post" action="?/phone" use:phoneEnhance>
+	<form bind:this={phoneFormEl} method="post" action="?/phone" use:phoneEnhance>
 		<input class="input" type="hidden" name="id" value={id} />
 		<label class="label label-text" for="phone">Phone</label>
 		<div class="input-group grid-cols-[auto_1fr_auto]">
-			<div class="ig-cell preset-tonal py-1.5">
+			<div class="ig-cell preset-tonal py-1.5 {phoneEdit ? 'text-warning-500' : ''}">
 				<Phone size={iconSize} />
 			</div>
 			<input
@@ -43,9 +46,15 @@
 				type="tel"
 				name="phone"
 				bind:value={$phoneForm.phone}
+				onkeyup={() => (phoneEdit = true)}
+				onfocusout={() => {
+					if (phoneEdit && phoneFormEl) {
+						phoneFormEl.requestSubmit();
+						phoneEdit = false;
+					}
+				}}
 				spellcheck="false"
 			/>
-			<button class="ig-btn preset-tonal btn-sm" type="submit"> Submit </button>
 		</div>
 	</form>
 	{#if errorsPhone && $phoneForm.phone}
