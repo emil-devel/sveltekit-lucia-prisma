@@ -1,19 +1,37 @@
 <script lang="ts">
 	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
-	import { superForm } from 'sveltekit-superforms';
+	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { profileAvatarSchema } from '$lib/valibot';
 	import { scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { ImagePlus, Trash, UserRoundPen, X } from '@lucide/svelte';
 
-	let { id, data, isSelf, iconSize } = $props();
+	type AvatarFormValues = {
+		id: string;
+		avatar?: string;
+	};
+
+	type Props = {
+		id: string;
+		data: {
+			avatarForm: SuperValidated<AvatarFormValues>;
+		};
+		isSelf: boolean;
+		iconSize: number;
+	};
+
+	let props: Props = $props();
+	let data = $state(props.data);
+	let id = $derived(props.id);
+	let isSelf = $derived(props.isSelf);
+	let iconSize = $derived(props.iconSize);
 
 	const {
 		enhance: avatarEnhance,
 		errors: avatarErrors,
 		form: avatarForm
-	} = superForm(data.avatarForm, {
+	} = superForm<AvatarFormValues>(data.avatarForm, {
 		validators: valibot(profileAvatarSchema),
 		validationMethod: 'onblur'
 	});
@@ -25,6 +43,13 @@
 	let avatarDelete = $state(false);
 	let avatarFormEl: HTMLFormElement | null = $state(null);
 	let avatarPreview: string | undefined = $state();
+	const avatarSrc = $derived(
+		avatarPreview && avatarPreview.length > 0
+			? avatarPreview
+			: $avatarForm.avatar && $avatarForm.avatar.length > 0
+				? $avatarForm.avatar
+				: ''
+	);
 	const avatarUpload = (details: any) => {
 		// Normalize payload to support both CustomEvent and direct object usage
 		const payload = details?.detail ?? details;
@@ -117,14 +142,8 @@
 				<div class="grid grid-cols-2 gap-4">
 					<div class="relative flex items-center justify-center">
 						{#if avatarPreview || $avatarForm.avatar}
-							{#key avatarPreview && avatarPreview.length > 0 ? avatarPreview : $avatarForm.avatar}
-								<img
-									src={avatarPreview && avatarPreview.length > 0
-										? avatarPreview
-										: $avatarForm.avatar}
-									alt="Avatar Preview"
-									class="max-w-full object-cover"
-								/>
+							{#key avatarSrc}
+								<img src={avatarSrc} alt="Avatar Preview" class="max-w-full object-cover" />
 							{/key}
 							{#if !avatarPreview && $avatarForm.avatar}
 								{#if avatarDelete}

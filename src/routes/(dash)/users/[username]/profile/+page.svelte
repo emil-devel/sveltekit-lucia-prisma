@@ -12,7 +12,8 @@
 	import { ArrowBigLeft, UserRound, UserRoundPen } from '@lucide/svelte';
 	const iconSize: number = 16;
 
-	let { data }: PageProps = $props();
+	let props: PageProps = $props();
+	let data = $state(props.data);
 
 	// Destructure basic fields
 	const { id, name, userId } = data;
@@ -64,10 +65,8 @@
 					<span>Profile</span>
 				</h2>
 				<AvatarUpload {id} {data} {isSelf} {iconSize} />
-				<div class="flex gap-2">
-					<FirstName {id} {data} {isSelf} {iconSize} />
-					<LastName {id} {data} {isSelf} {iconSize} />
-				</div>
+				<FirstName {id} {data} {isSelf} {iconSize} />
+				<LastName {id} {data} {isSelf} {iconSize} />
 				<Phone {id} {data} {isSelf} {iconSize} />
 				<div class="py-4">
 					<Bio {id} {data} {isSelf} />

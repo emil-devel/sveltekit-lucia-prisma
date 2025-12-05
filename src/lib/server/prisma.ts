@@ -1,12 +1,8 @@
 import { DATABASE_URL } from '$env/static/private';
-import { PrismaClient } from './generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../../../generated/prisma/client';
 
-const prisma = new PrismaClient({
-	datasources: {
-		db: {
-			url: DATABASE_URL
-		}
-	}
-});
+const adapter = new PrismaPg({ connectionString: DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 export default prisma;

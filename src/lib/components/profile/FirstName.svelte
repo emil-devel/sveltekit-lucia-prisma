@@ -1,18 +1,38 @@
 <script lang="ts">
-	import { superForm } from 'sveltekit-superforms';
+	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { profileFirstNameSchema } from '$lib/valibot';
 	import { slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { UserRound } from '@lucide/svelte';
 
-	let { id, data, isSelf, iconSize } = $props();
+	type FirstNameFormValues = {
+		id: string;
+		firstName?: string | null;
+	};
+
+	type Props = {
+		id: string;
+		data: {
+			firstNameForm: SuperValidated<FirstNameFormValues>;
+		};
+		isSelf: boolean;
+		iconSize: number;
+	};
+
+	let props: Props = $props();
+	let data = $state(props.data);
+	let id = $derived(props.id);
+	let isSelf = $derived(props.isSelf);
+	let iconSize = $derived(props.iconSize);
 
 	const {
 		enhance: firstNameEnhance,
 		form: firstNameForm,
 		errors: firstNameErrors
-	} = superForm(data.firstNameForm, { validators: valibot(profileFirstNameSchema) });
+	} = superForm<FirstNameFormValues>(data.firstNameForm, {
+		validators: valibot(profileFirstNameSchema)
+	});
 
 	const errorsFirstName = $derived(($firstNameErrors.firstName ?? []) as string[]);
 
