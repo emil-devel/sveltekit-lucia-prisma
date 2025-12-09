@@ -19,9 +19,9 @@ export const load = (async (event) => {
 export const actions: Actions = {
 	default: async (event) => {
 		const form = await superValidate(event.request, valibot(registerSchema));
-		const { username, email, password } = form.data;
-
 		if (!form.valid) return fail(400, { form });
+		
+		const { username, email, password } = form.data;
 
 		const userExist = await prisma.user.findFirst({ where: { username } });
 		if (userExist) return setError(form, 'username', 'Username already exist!');
@@ -64,7 +64,7 @@ export const actions: Actions = {
 			// Always return the form for superforms on error
 			return fail(500, {
 				form,
-				message: 'An error has occurred while creating the user.',
+				message: 'An error has occurred while creating the user! Please try again.',
 				error: String(error)
 			});
 		}
