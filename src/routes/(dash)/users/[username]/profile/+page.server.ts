@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { redirect, setFlash } from 'sveltekit-flash-message/server';
 import { isAdmin, isSelf } from '$lib/permissions';
-import { fail, superValidate } from 'sveltekit-superforms';
+import { fail, setError, superValidate } from 'sveltekit-superforms';
 import prisma from '$lib/server/prisma';
 import { valibot } from 'sveltekit-superforms/adapters';
 import {
@@ -9,7 +9,8 @@ import {
 	profileFirstNameSchema,
 	profileLastNameSchema,
 	profilePhoneSchema,
-	profileBioSchema
+	profileBioSchema,
+	sanitizeFormData
 } from '$lib/valibot';
 
 export const load: PageServerLoad = (async (event) => {
@@ -97,7 +98,9 @@ export const actions: Actions = {
 		);
 	},
 	firstName: async (event) => {
-		const firstNameForm = await superValidate(event.request, valibot(profileFirstNameSchema));
+		const formData = await event.request.formData();
+		const data = sanitizeFormData(formData, { trim: ['firstName'] });
+		const firstNameForm = await superValidate(data, valibot(profileFirstNameSchema));
 		if (!firstNameForm.valid) return fail(400, { firstNameForm });
 		const viewer = event.locals.authUser;
 		if (!viewer) throw redirect(302, '/login');
@@ -113,7 +116,9 @@ export const actions: Actions = {
 		setFlash({ type: 'success', message: 'First name updated.' }, event.cookies);
 	},
 	lastName: async (event) => {
-		const lastNameForm = await superValidate(event.request, valibot(profileLastNameSchema));
+		const formData = await event.request.formData();
+		const data = sanitizeFormData(formData, { trim: ['lastName'] });
+		const lastNameForm = await superValidate(data, valibot(profileLastNameSchema));
 		if (!lastNameForm.valid) return fail(400, { lastNameForm });
 		const viewer = event.locals.authUser;
 		if (!viewer) throw redirect(302, '/login');
@@ -129,11 +134,19 @@ export const actions: Actions = {
 		setFlash({ type: 'success', message: 'Last name updated.' }, event.cookies);
 	},
 	phone: async (event) => {
-		const phoneForm = await superValidate(event.request, valibot(profilePhoneSchema));
+		const formData = await event.request.formData();
+		const data = sanitizeFormData(formData, { trim: ['phone'] });
+		const phoneForm = await superValidate(data, valibot(profilePhoneSchema));
 		if (!phoneForm.valid) return fail(400, { phoneForm });
 		const viewer = event.locals.authUser;
 		if (!viewer) throw redirect(302, '/login');
 		const { id, phone } = phoneForm.data;
+		if (typeof phone === 'string' && phone.length > 0) {
+			const digits = phone.replace(/[^0-9]/g, '');
+			if (digits.length < 7 || digits.length > 15) {
+				return setError(phoneForm, 'phone', 'Phone number must contain between 7 and 15 digits');
+			}
+		}
 		try {
 			await prisma.profile.update({ where: { id }, data: { phone } });
 		} catch (error) {

@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { redirect } from 'sveltekit-flash-message/server';
-import { loginSchema } from '$lib/valibot';
+import { loginSchema, sanitizeFormData } from '$lib/valibot';
 import { valibot } from 'sveltekit-superforms/adapters';
 import { verify } from '@node-rs/argon2';
 import * as auth from '$lib/server/auth';
@@ -16,7 +16,9 @@ export const load = (async (event) => {
 
 export const actions: Actions = {
 	default: async (event) => {
-		const form = await superValidate(event.request, valibot(loginSchema));
+		const formData = await event.request.formData();
+		const data = sanitizeFormData(formData, { trim: ['username'], lowercase: ['username'] });
+		const form = await superValidate(data, valibot(loginSchema));
 		const { username, password } = form.data;
 
 		if (!form.valid) return fail(400, { form });

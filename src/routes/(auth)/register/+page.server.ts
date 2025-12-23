@@ -4,7 +4,7 @@ import { hash } from '@node-rs/argon2';
 import { fail } from 'sveltekit-superforms';
 import { redirect } from 'sveltekit-flash-message/server';
 import { superValidate } from 'sveltekit-superforms';
-import { registerSchema } from '$lib/valibot';
+import { registerSchema, sanitizeFormData } from '$lib/valibot';
 import { valibot } from 'sveltekit-superforms/adapters';
 import { setError } from 'sveltekit-superforms';
 import prisma from '$lib/server/prisma';
@@ -18,9 +18,19 @@ export const load = (async (event) => {
 
 export const actions: Actions = {
 	default: async (event) => {
-		const form = await superValidate(event.request, valibot(registerSchema));
+		const formData = await event.request.formData();
+		const data = sanitizeFormData(formData, {
+			trim: ['username', 'email'],
+			lowercase: ['username', 'email']
+		});
+		const form = await superValidate(data, valibot(registerSchema));
 		if (!form.valid) return fail(400, { form });
-		
+
+		if (form.data.passwordConfirm !== form.data.password) {
+			setError(form, 'passwordConfirm', 'Passwords dont match');
+			return fail(400, { form });
+		}
+
 		const { username, email, password } = form.data;
 
 		const userExist = await prisma.user.findFirst({ where: { username } });
