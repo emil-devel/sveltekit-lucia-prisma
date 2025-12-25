@@ -2,6 +2,14 @@
 	"name": "sveltekit-lucia-prisma",
 	"private": true,
 	"version": "0.1.0",
+	"keywords": [
+		"user management",
+		"user roles",
+		"lucia",
+		"sveltekit",
+		"prisma",
+		"postgres"
+	],
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
