@@ -60,6 +60,7 @@
 						firstNameEdit = false;
 					}
 				}}
+				id="firstName"
 				spellcheck="false"
 			/>
 		</div>
