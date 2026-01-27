@@ -1,7 +1,5 @@
 {
-	"chat.mcp.serverSampling": {
-		"sveltekit-lucia-prisma/.vscode/mcp.json: svelte-llm": {
-			"allowedModels": ["copilot/gpt-5-mini", "copilot/claude-3.5-sonnet"]
-		}
+	"files.associations": {
+		"*.css": "tailwindcss"
 	}
 }

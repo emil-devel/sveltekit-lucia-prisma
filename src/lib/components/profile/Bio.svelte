@@ -1,34 +1,19 @@
 <script lang="ts">
 	import { profileBioSchema } from '$lib/valibot';
+	import { Tipex } from '@friendofsvelte/tipex';
 	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 
-	type BioFormValues = {
-		id: string;
-		bio?: string | null;
-	};
-
-	type Props = {
-		id: string;
-		data: {
-			bioForm: SuperValidated<BioFormValues>;
-		};
-		isSelf: boolean;
-	};
-
-	let props: Props = $props();
+	let props = $props();
+	let { id, isSelf } = props;
 	let data = $state(props.data);
-	let id = $derived(props.id);
-	let isSelf = $derived(props.isSelf);
 
-	const { enhance: bioEnhance, form: bioForm } = superForm<BioFormValues>(data.bioForm, {
+	const { enhance: bioEnhance, form: bioForm } = superForm(data.bioForm, {
 		validators: valibot(profileBioSchema),
 		dataType: 'json'
 	});
 
-	// Tipex
-	import { Tipex } from '@friendofsvelte/tipex';
-	// Initial HTML content from server form
+	// Tipex editor setup
 	let body = $state($bioForm.bio ?? '');
 	// Editor instance binding (use a permissive type to avoid tiptap version type mismatches)
 	let editor = $state<any>();
