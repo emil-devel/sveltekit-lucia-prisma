@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
+	import { resolve } from '$app/paths';
 	import { loginSchema } from '$lib/valibot';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { superForm } from 'sveltekit-superforms';
@@ -77,7 +78,7 @@
 				>
 					<span>Haven't Account?</span>
 					<ArrowRight size="12" />
-					<a href="/register" class="anchor">register</a>
+					<a href={resolve('/register')} class="anchor">register</a>
 				</p>
 			</div>
 		{/if}

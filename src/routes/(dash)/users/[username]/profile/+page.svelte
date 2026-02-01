@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { superForm } from 'sveltekit-superforms';
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
 	import { isSelf as isSelfUtil } from '$lib/permissions';
@@ -65,8 +66,10 @@
 					<span>Profile</span>
 				</h2>
 				<AvatarUpload {id} {data} {isSelf} {iconSize} />
-				<FirstName {id} {data} {isSelf} {iconSize} />
-				<LastName {id} {data} {isSelf} {iconSize} />
+				<div class="flex gap-2">
+					<FirstName {id} {data} {isSelf} {iconSize} />
+					<LastName {id} {data} {isSelf} {iconSize} />
+				</div>
 				<Phone {id} {data} {isSelf} {iconSize} />
 				<div class="py-4">
 					<Bio {id} {data} {isSelf} />
@@ -78,7 +81,7 @@
 		</footer>
 	</div>
 	<div class="mt-8 flex items-center justify-between gap-4 border-t border-surface-200-800 p-2">
-		<a class="btn preset-tonal btn-sm" href="/users/{name}">
+		<a class="btn preset-tonal btn-sm" href={resolve(`/users/${name}`)}>
 			<ArrowBigLeft size={iconSize} />
 			{name}
 		</a>

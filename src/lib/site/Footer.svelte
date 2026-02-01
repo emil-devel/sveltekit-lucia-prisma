@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Github, UsersRound } from '@lucide/svelte';
+	import { UsersRound } from '@lucide/svelte';
 </script>
 
 {#if page.data.authUser}
@@ -10,7 +11,7 @@
 			class:preset-filled-primary-200-800={page.url.pathname === '/users'}
 			class:preset-tonal-primary={page.url.pathname.includes('/users')}
 			aria-current={page.url.pathname === '/users'}
-			href="/users"
+			href={resolve('/users')}
 		>
 			<UsersRound size="16" />
 			<span>Users</span>
@@ -19,7 +20,6 @@
 {/if}
 <p class="text-center">
 	<a href="https://emil-devel.github.io/" target="_blank">
-		<Github size={16} />
 		<small>emil-devel.github.io</small>
 	</a>
 </p>

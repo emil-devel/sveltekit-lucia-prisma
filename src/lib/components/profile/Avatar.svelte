@@ -1,37 +1,23 @@
 <script lang="ts">
 	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
-	import { superForm, type SuperValidated } from 'sveltekit-superforms';
+	import type { ActionResult } from '@sveltejs/kit';
+	import { fromAction, type Attachment } from 'svelte/attachments';
+	import { superForm } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { profileAvatarSchema } from '$lib/valibot';
 	import { scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { ImagePlus, Trash, UserRoundPen, X } from '@lucide/svelte';
 
-	type AvatarFormValues = {
-		id: string;
-		avatar?: string;
-	};
-
-	type Props = {
-		id: string;
-		data: {
-			avatarForm: SuperValidated<AvatarFormValues>;
-		};
-		isSelf: boolean;
-		iconSize: number;
-	};
-
-	let props: Props = $props();
+	let props = $props();
+	let { id, isSelf, iconSize } = props;
 	let data = $state(props.data);
-	let id = $derived(props.id);
-	let isSelf = $derived(props.isSelf);
-	let iconSize = $derived(props.iconSize);
 
 	const {
 		enhance: avatarEnhance,
 		errors: avatarErrors,
 		form: avatarForm
-	} = superForm<AvatarFormValues>(data.avatarForm, {
+	} = superForm(data.avatarForm, {
 		validators: valibot(profileAvatarSchema),
 		validationMethod: 'onblur'
 	});
@@ -43,16 +29,41 @@
 	let avatarDelete = $state(false);
 	let avatarFormEl: HTMLFormElement | null = $state(null);
 	let avatarPreview: string | undefined = $state();
-	const avatarSrc = $derived(
-		avatarPreview && avatarPreview.length > 0
-			? avatarPreview
-			: $avatarForm.avatar && $avatarForm.avatar.length > 0
-				? $avatarForm.avatar
-				: ''
-	);
-	const avatarUpload = (details: any) => {
+
+	const captureForm: Attachment<HTMLFormElement> = (node) => {
+		avatarFormEl = node;
+		return () => {
+			avatarFormEl = null;
+		};
+	};
+	type FileUploadChangePayload = {
+		files?: File[];
+		file?: File;
+		acceptedFiles?: File[];
+	};
+
+	type FileUploadChangeEvent =
+		| CustomEvent<FileUploadChangePayload>
+		| FileUploadChangePayload
+		| null
+		| undefined;
+
+	type AvatarActionData = {
+		form?: {
+			data?: {
+				avatar?: string;
+			};
+		};
+	};
+
+	type AvatarActionResult = ActionResult<AvatarActionData, AvatarActionData>;
+
+	const avatarUpload = (details: FileUploadChangeEvent) => {
 		// Normalize payload to support both CustomEvent and direct object usage
-		const payload = details?.detail ?? details;
+		const payload =
+			typeof details === 'object' && details !== null && 'detail' in details
+				? details.detail
+				: details;
 		avatarErrors.set({ avatar: [] });
 		const file = payload?.files?.[0] ?? payload?.file ?? payload?.acceptedFiles?.[0];
 		// If no file present, this is likely a remove/clear event from FileUpload
@@ -97,16 +108,18 @@
 	{#if avatarEdit}
 		<div class="border border-surface-200-800 p-2" transition:slide>
 			<form
-				bind:this={avatarFormEl}
 				method="post"
 				action="?/avatar"
 				enctype="multipart/form-data"
-				use:avatarEnhance={{
-					onResult: ({ result }) => {
-						const status = (result as any)?.status ?? 200;
-						const isFailure = (result as any)?.type === 'failure' || status >= 400;
+				{@attach captureForm}
+				{@attach fromAction(avatarEnhance, () => ({
+					onResult: ({ result }: { result: AvatarActionResult }) => {
+						const status =
+							'status' in result && typeof result.status === 'number' ? result.status : 200;
+						const isFailure = result.type === 'failure' || result.type === 'error' || status >= 400;
 						if (!isFailure) {
-							const newAvatar: unknown = (result as any)?.data?.form?.data?.avatar;
+							const newAvatar =
+								result.type === 'success' ? result.data?.form?.data?.avatar : undefined;
 							// Update both the store and preview
 							if (typeof newAvatar === 'string') {
 								if (newAvatar.length > 0) {
@@ -115,7 +128,7 @@
 									avatarPreview = newAvatar;
 								} else {
 									// Deletion path: explicit empty string means clear
-									$avatarForm.avatar = '' as any;
+									$avatarForm.avatar = '';
 									avatarPreview = undefined;
 								}
 							} else {
@@ -125,7 +138,7 @@
 								if (avatarPreview && avatarPreview.length > 0) {
 									$avatarForm.avatar = avatarPreview;
 								} else {
-									$avatarForm.avatar = '' as any;
+									$avatarForm.avatar = '';
 									avatarPreview = undefined;
 								}
 							}
@@ -135,15 +148,21 @@
 							}, 0);
 						}
 					}
-				}}
+				}))}
 			>
 				<input type="hidden" name="id" value={id} />
 				<input type="hidden" name="avatar" bind:value={avatarPreview} />
 				<div class="grid grid-cols-2 gap-4">
 					<div class="relative flex items-center justify-center">
 						{#if avatarPreview || $avatarForm.avatar}
-							{#key avatarSrc}
-								<img src={avatarSrc} alt="Avatar Preview" class="max-w-full object-cover" />
+							{#key avatarPreview && avatarPreview.length > 0 ? avatarPreview : $avatarForm.avatar}
+								<img
+									src={avatarPreview && avatarPreview.length > 0
+										? avatarPreview
+										: $avatarForm.avatar}
+									alt="Avatar Preview"
+									class="max-w-full object-cover"
+								/>
 							{/key}
 							{#if !avatarPreview && $avatarForm.avatar}
 								{#if avatarDelete}

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { ArrowRight, Lock, LockOpen, LogIn, Mail, UserRound } from '@lucide/svelte';
+	import { resolve } from '$app/paths';
 	import { registerSchema } from '$lib/valibot';
 	import { superForm } from 'sveltekit-superforms';
 	import { valibot } from 'sveltekit-superforms/adapters';
 	import { fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import { ArrowRight, Lock, LockOpen, LogIn, Mail, UserRound } from '@lucide/svelte';
 
 	let props: PageProps = $props();
 	let data = $state(props.data);
@@ -29,6 +30,7 @@
 
 <svelte:head>
 	<title>Register</title>
+	<meta name="description" content="Create a new account" />
 </svelte:head>
 
 <section class="mx-auto max-w-xs">
@@ -118,7 +120,7 @@
 				>
 					<span>Have Account?</span>
 					<ArrowRight size="12" />
-					<a href="/login" class="anchor">login</a>
+					<a href={resolve('/login')} class="anchor">login</a>
 				</p>
 			</div>
 		{/if}

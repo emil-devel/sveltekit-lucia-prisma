@@ -1,8 +1,5 @@
 <script lang="ts">
-	import type { PageServerData } from './$types';
 	import { page } from '$app/state';
-
-	let { data }: { data: PageServerData } = $props();
 </script>
 
 <section class="mx-auto max-w-xs">
