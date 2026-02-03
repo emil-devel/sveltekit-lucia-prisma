@@ -29,9 +29,9 @@
 	const {
 		enhance: lastNameEnhance,
 		form: lastNameForm,
-		errors: lastNameErrors
+		errors: lastNameErrors,
 	} = superForm<LastNameFormValues>(data.lastNameForm, {
-		validators: valibot(profileLastNameSchema)
+		validators: valibot(profileLastNameSchema),
 	});
 
 	const errorsLastName = $derived(($lastNameErrors.lastName ?? []) as string[]);
@@ -64,20 +64,20 @@
 				spellcheck="false"
 			/>
 		</div>
+		{#if errorsLastName && $lastNameForm.lastName}
+			<div class="mx-auto max-w-xs space-y-1.5 pt-4 text-center text-sm" aria-live="polite">
+				{#each errorsLastName as message, i (i)}
+					<p
+						class="card preset-filled-error-300-700 p-2"
+						transition:slide={{ duration: 140 }}
+						animate:flip={{ duration: 160 }}
+					>
+						{message}
+					</p>
+				{/each}
+			</div>
+		{/if}
 	</form>
-	{#if errorsLastName && $lastNameForm.lastName}
-		<div class="mx-auto max-w-xs space-y-1.5 text-center text-sm" aria-live="polite">
-			{#each errorsLastName as message, i (i)}
-				<p
-					class="card preset-filled-error-300-700 p-2"
-					transition:slide={{ duration: 140 }}
-					animate:flip={{ duration: 160 }}
-				>
-					{message}
-				</p>
-			{/each}
-		</div>
-	{/if}
 {:else}
 	<div>
 		<p class="label-text">Last Name</p>
