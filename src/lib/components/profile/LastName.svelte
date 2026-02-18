@@ -21,18 +21,17 @@
 	};
 
 	let props: Props = $props();
-	let data = $state(props.data);
-	let id = $derived(props.id);
-	let isSelf = $derived(props.isSelf);
-	let iconSize = $derived(props.iconSize);
+	let { data, id, isSelf, iconSize } = $derived(props);
 
 	const {
 		enhance: lastNameEnhance,
 		form: lastNameForm,
-		errors: lastNameErrors,
-	} = superForm<LastNameFormValues>(data.lastNameForm, {
-		validators: valibot(profileLastNameSchema),
-	});
+		errors: lastNameErrors
+	} = $derived(
+		superForm<LastNameFormValues>(data.lastNameForm, {
+			validators: valibot(profileLastNameSchema)
+		})
+	);
 
 	const errorsLastName = $derived(($lastNameErrors.lastName ?? []) as string[]);
 

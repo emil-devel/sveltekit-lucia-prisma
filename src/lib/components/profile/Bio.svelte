@@ -1,18 +1,19 @@
 <script lang="ts">
-	import { profileBioSchema } from '$lib/valibot';
 	import { Tipex, type TipexEditor } from '@friendofsvelte/tipex';
 	import { fromAction } from 'svelte/attachments';
-	import { superForm } from 'sveltekit-superforms';
+	import { profileBioSchema } from '$lib/valibot';
 	import { valibot } from 'sveltekit-superforms/adapters';
+	import { superForm } from 'sveltekit-superforms';
 
 	let props = $props();
-	let { id, isSelf } = props;
-	let data = $state(props.data);
+	let { data, id, isSelf } = $derived(props);
 
-	const { enhance: bioEnhance, form: bioForm } = superForm(data.bioForm, {
-		validators: valibot(profileBioSchema),
-		dataType: 'json'
-	});
+	const { enhance: bioEnhance, form: bioForm } = $derived(
+		superForm(data.bioForm, {
+			validators: valibot(profileBioSchema),
+			dataType: 'json'
+		})
+	);
 
 	// Tipex editor setup
 	// Initial HTML content from server form

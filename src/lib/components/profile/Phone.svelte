@@ -21,18 +21,17 @@
 	};
 
 	let props: Props = $props();
-	let data = $state(props.data);
-	let id = $derived(props.id);
-	let isSelf = $derived(props.isSelf);
-	let iconSize = $derived(props.iconSize);
+	let { data, id, isSelf, iconSize } = $derived(props);
 
 	const {
 		enhance: phoneEnhance,
 		form: phoneForm,
 		errors: phoneErrors
-	} = superForm<PhoneFormValues>(data.phoneForm, {
-		validators: valibot(profilePhoneSchema)
-	});
+	} = $derived(
+		superForm<PhoneFormValues>(data.phoneForm, {
+			validators: valibot(profilePhoneSchema)
+		})
+	);
 
 	const errorsPhone = $derived(($phoneErrors.phone ?? []) as string[]);
 

@@ -10,17 +10,18 @@
 	import { ImagePlus, Trash, UserRoundPen, X } from '@lucide/svelte';
 
 	let props = $props();
-	let { id, isSelf, iconSize } = props;
-	let data = $state(props.data);
+	let { data, id, isSelf, iconSize } = $derived(props);
 
 	const {
 		enhance: avatarEnhance,
 		errors: avatarErrors,
 		form: avatarForm
-	} = superForm(data.avatarForm, {
-		validators: valibot(profileAvatarSchema),
-		validationMethod: 'onblur'
-	});
+	} = $derived(
+		superForm(data.avatarForm, {
+			validators: valibot(profileAvatarSchema),
+			validationMethod: 'onblur'
+		})
+	);
 
 	const errorsAvatar = $derived(($avatarErrors.avatar ?? []) as string[]);
 
