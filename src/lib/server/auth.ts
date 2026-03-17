@@ -1,5 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import type { Session } from './generated/prisma/client';
+import type { Session } from '../../../generated/prisma/client';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
 import prisma from '$lib/server/prisma';

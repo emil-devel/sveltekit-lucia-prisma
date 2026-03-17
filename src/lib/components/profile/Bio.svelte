@@ -1,15 +1,26 @@
 <script lang="ts">
+	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { Tipex, type TipexEditor } from '@friendofsvelte/tipex';
 	import { fromAction } from 'svelte/attachments';
 	import { profileBioSchema } from '$lib/valibot';
 	import { valibot } from 'sveltekit-superforms/adapters';
-	import { superForm } from 'sveltekit-superforms';
 
-	let props = $props();
-	let { data, id, isSelf } = $derived(props);
+	type BioFormValues = {
+		id: string;
+		bio?: string | null;
+	};
+
+	type Props = {
+		id: string;
+		data: {
+			bioForm: SuperValidated<BioFormValues>;
+		};
+		isSelf: boolean;
+	};
+	let { data, id, isSelf }: Props = $props();
 
 	const { enhance: bioEnhance, form: bioForm } = $derived(
-		superForm(data.bioForm, {
+		superForm<BioFormValues>(data.bioForm, {
 			validators: valibot(profileBioSchema),
 			dataType: 'json'
 		})
@@ -53,7 +64,7 @@
 	</form>
 	<div class="pb-4">
 		<Tipex
-			body={$bioForm.bio}
+			body={$bioForm.bio ?? ''}
 			bind:tipex={editor}
 			floating
 			focal
